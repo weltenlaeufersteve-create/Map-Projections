@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Country SVG Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --surface2: #242220;
+    --border: #333128;
+    --accent: #e8c547;
+    --accent2: #c47a3a;
+    --text: #f0ebe0;
+    --text-dim: #8a8470;
+    --green: #5ca87a;
+    --blue: #5b8db8;
+    --red: #c45a5a;
+  }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    grid-template-rows: 38px 1fr;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* TITLE BAR */
+  .titlebar {
+    grid-column: 1 / -1;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 14px;
+    -webkit-app-region: drag;
+  }
+
+  .titlebar h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .titlebar .subtitle {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .win-controls {
+    display: flex;
+    gap: 4px;
+    -webkit-app-region: no-drag;
+  }
+
+  .wc-btn {
+    width: 28px;
+    height: 22px;
+    border-radius: 3px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    font-family: 'DM Mono', monospace;
+  }
+  .wc-btn:hover { background: var(--surface2); color: var(--text); }
+  #winClose:hover { background: var(--red); color: white; }
+
+  /* LEFT PANEL */
+  .panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* RESOLUTION TOGGLE */
+  .res-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .res-opt {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 6px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 12px;
+  }
+  .res-opt:hover { border-color: var(--accent2); }
+  .res-opt input { display: none; }
+  .res-opt.active { border-color: var(--accent); background: rgba(232,197,71,0.05); color: var(--accent); }
+  .res-opt .res-label { font-size: 13px; font-weight: 500; }
+  .res-opt .res-avail { font-size: 10px; color: var(--text-dim); }
+  .res-opt.active .res-avail { color: var(--green); }
+  .res-opt.unavail { opacity: 0.35; pointer-events: none; }
+
+  /* MANUAL LOAD */
+  .manual-section {
+    margin-top: 8px;
+  }
+
+  .manual-toggle {
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .manual-toggle:hover { color: var(--text); }
+  .manual-body {
+    margin-top: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .manual-body.open { display: flex; }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 5px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(232,197,71,0.04);
+    color: var(--text);
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .status-pill.ok  { background: rgba(92,168,122,0.15); color: var(--green); }
+  .status-pill.err { background: rgba(196,90,90,0.15);  color: var(--red); }
+  .status-pill.loading { background: rgba(232,197,71,0.1); color: var(--accent); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* COUNTRY COMBOS */
+  .combo-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .combo-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .combo-item:hover { border-color: var(--accent2); }
+  .combo-item.active { border-color: var(--accent); background: rgba(232,197,71,0.05); }
+  .combo-tags { display: flex; flex-wrap: wrap; gap: 3px; flex: 1; }
+  .combo-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 3px;
+    border: 1px solid var(--border); color: var(--text-dim);
+  }
+  .combo-item.active .combo-tag { color: var(--text); border-color: rgba(232,197,71,0.3); }
+  .combo-remove {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; padding: 0 2px;
+    transition: color 0.15s;
+  }
+  .combo-remove:hover { color: var(--red); }
+
+  /* ADD COMBO */
+  .add-combo { display: flex; flex-direction: column; gap: 8px; }
+
+  .country-input-wrap { position: relative; }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 8px 11px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+
+  .autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    z-index: 100;
+    max-height: 180px;
+    overflow-y: auto;
+    display: none;
+  }
+  .autocomplete-list.open { display: block; }
+  .autocomplete-item {
+    padding: 7px 11px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .autocomplete-item:hover, .autocomplete-item.focused {
+    background: rgba(232,197,71,0.08);
+    color: var(--accent);
+  }
+
+  .selected-countries {
+    display: flex; flex-wrap: wrap; gap: 5px; min-height: 26px;
+  }
+
+  .sel-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; color: white; font-weight: 500;
+  }
+  .sel-tag button {
+    background: none; border: none; color: rgba(255,255,255,0.7);
+    cursor: pointer; font-size: 12px; padding: 0; line-height: 1;
+  }
+  .sel-tag button:hover { color: white; }
+
+  /* COLOR ASSIGN */
+  .color-assign { display: flex; flex-direction: column; gap: 5px; }
+  .color-assign-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .color-assign-row span { flex: 1; color: var(--text-dim); }
+  .color-dot {
+    width: 18px; height: 18px; border-radius: 3px; cursor: pointer;
+    border: 2px solid var(--border); flex-shrink: 0;
+    transition: border-color 0.15s;
+  }
+  .color-dot:hover { border-color: var(--accent); }
+
+  .color-picker-popup {
+    position: fixed; z-index: 200;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px;
+    display: none; flex-wrap: wrap; gap: 5px;
+    width: 174px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .color-picker-popup.open { display: flex; }
+  .swatch {
+    width: 22px; height: 22px; border-radius: 3px; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.1s;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.active { border-color: white; }
+
+  /* PROJECTION */
+  .radio-group { display: flex; flex-direction: column; gap: 5px; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 9px; border-radius: 5px; cursor: pointer;
+    border: 1px solid transparent; transition: all 0.15s; font-size: 12px;
+  }
+  .radio-opt:hover { background: var(--surface2); }
+  .radio-opt input { accent-color: var(--accent); }
+  .radio-opt small { color: var(--text-dim); font-size: 10px; display: block; margin-top: 1px; }
+
+  /* STROKE */
+  .stroke-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .stroke-row input[type=range] { flex: 1; accent-color: var(--accent); }
+
+  /* BUTTONS */
+  .btn {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    border: none; border-radius: 5px; padding: 9px 14px;
+    cursor: pointer; transition: all 0.15s; letter-spacing: 0.03em;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0f0e0c; font-weight: 500; width: 100%;
+  }
+  .btn-primary:hover { background: #f0d060; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); font-size: 11px; padding: 6px 11px;
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent); }
+  .btn-add {
+    background: rgba(232,197,71,0.08); color: var(--accent);
+    border: 1px solid rgba(232,197,71,0.2);
+    font-size: 11px; padding: 6px 11px; align-self: flex-start;
+  }
+  .btn-add:hover { background: rgba(232,197,71,0.15); }
+
+  /* RIGHT: PREVIEW */
+  .preview-area { display: flex; flex-direction: column; overflow: hidden; }
+
+  .preview-toolbar {
+    padding: 10px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .preview-toolbar span { font-size: 11px; color: var(--text-dim); flex: 1; }
+
+  .preview-canvas {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 36px; overflow: hidden;
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 20px,
+      rgba(255,255,255,0.015) 20px, rgba(255,255,255,0.015) 40px
+    );
+  }
+  .preview-canvas svg {
+    max-width: 100%; max-height: 100%;
+    filter: drop-shadow(0 8px 40px rgba(0,0,0,0.6));
+  }
+
+  .empty-state { text-align: center; color: var(--text-dim); }
+  .empty-state .big { font-size: 42px; margin-bottom: 12px; display: block; }
+  .empty-state p { font-size: 12px; line-height: 1.8; }
+
+  .download-bar {
+    padding: 10px 22px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .download-bar span { font-size: 11px; color: var(--text-dim); flex: 1; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- TITLE BAR -->
+<div class="titlebar">
+  <h1>Country SVG Tool</h1>
+  <span class="subtitle">Natural Earth · LAEA · Local</span>
+  <div class="win-controls">
+    <button class="wc-btn" id="winMin">─</button>
+    <button class="wc-btn" id="winMax">□</button>
+    <button class="wc-btn" id="winClose">✕</button>
+  </div>
+</div>
+
+<!-- LEFT PANEL -->
+<div class="panel">
+
+  <!-- 01 RESOLUTION + AUTO-LOAD -->
+  <div>
+    <div class="section-label">01 — Natural Earth</div>
+    <div class="res-row">
+      <label class="res-opt" id="resOpt10m">
+        <input type="radio" name="res" value="10m" id="res10m">
+        <span class="res-label">10m</span>
+        <span class="res-avail" id="resAvail10m">prüfe…</span>
+      </label>
+      <label class="res-opt" id="resOpt50m">
+        <input type="radio" name="res" value="50m" id="res50m">
+        <span class="res-label">50m</span>
+        <span class="res-avail" id="resAvail50m">prüfe…</span>
+      </label>
+    </div>
+    <div style="margin-top:8px;" id="fileStatus"></div>
+
+    <!-- Manual fallback -->
+    <div class="manual-section">
+      <button class="manual-toggle" id="manualToggle1">▸ Manuell laden…</button>
+      <div class="manual-body" id="manualBody1">
+        <button class="btn btn-secondary" id="pickCountriesBtn">↑ ZIP / SHP wählen…</button>
+        <div class="drop-zone" id="dropZone">ZIP hierher ziehen</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 01b PHYSICAL -->
+  <div>
+    <div class="section-label">01b — Seen &amp; Flüsse <span id="physAutoLabel" style="color:var(--green);font-size:10px;"></span></div>
+    <div id="fileStatusPhysical"></div>
+
+    <div class="manual-section" style="margin-top:6px;">
+      <button class="manual-toggle" id="manualToggle2">▸ Manuell laden…</button>
+      <div class="manual-body" id="manualBody2">
+        <button class="btn btn-secondary" id="pickPhysicalBtn">↑ Lakes + Rivers ZIPs…</button>
+        <div class="drop-zone" id="dropZonePhys">ZIPs hierher ziehen</div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;display:none;flex-direction:column;gap:6px;" id="layerToggles">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
+        <input type="checkbox" id="showLakes" checked style="accent-color:#5b8db8;">
+        <span>Seen</span>
+        <input type="color" id="lakeColor" value="#5b8db8" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
+        <input type="checkbox" id="showRivers" checked style="accent-color:#7ab3d4;">
+        <span>Flüsse</span>
+        <input type="color" id="riverColor" value="#7ab3d4" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
+      </label>
+      <div class="stroke-row" style="margin-top:2px;">
+        <span>Breite</span>
+        <input type="range" id="riverWidth" min="0.2" max="3" step="0.1" value="0.8">
+        <span id="riverWidthVal" style="min-width:24px;text-align:right;">0.8</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 02 COUNTRIES -->
+  <div>
+    <div class="section-label">02 — Länder-Kombination</div>
+    <div class="add-combo">
+      <div class="selected-countries" id="selectedCountries"></div>
+      <div class="country-input-wrap">
+        <input type="text" id="countryInput" placeholder="Land eingeben…" autocomplete="off">
+        <div class="autocomplete-list" id="autocompleteList"></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-add" id="addComboBtn">+ Kombi speichern</button>
+        <button class="btn btn-secondary" id="clearSelBtn">✕</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <div class="section-label">Gespeicherte Kombis</div>
+      <div class="combo-list" id="comboList"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 03 COLORS -->
+  <div>
+    <div class="section-label">03 — Farben</div>
+    <div class="color-assign" id="colorAssign">
+      <div style="font-size:11px;color:var(--text-dim);">Länder auswählen um Farben zuzuweisen</div>
+    </div>
+    <div style="margin-top:8px;" class="stroke-row">
+      <span>Stroke</span>
+      <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1">
+      <span id="strokeVal" style="min-width:24px;text-align:right;">1</span>
+      <input type="color" id="strokeColor" value="#ffffff" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
+    </div>
+    <div style="margin-top:8px;" class="stroke-row">
+      <span style="flex:1;">Inseln ausblenden</span>
+    </div>
+    <div style="margin-top:4px;" class="stroke-row">
+      <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" style="flex:1;accent-color:var(--accent);">
+      <span id="islandVal" style="min-width:60px;text-align:right;font-size:11px;">aus</span>
+    </div>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">
+      Filtert Teile kleiner als X% des größten Polygons
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 04 PROJECTION -->
+  <div>
+    <div class="section-label">04 — Projektion</div>
+    <div class="radio-group">
+      <label class="radio-opt">
+        <input type="radio" name="proj" value="laea" checked>
+        <div>
+          <div>Azimuthal Equal Area</div>
+          <small>Flächentreu · zentriert auf Region</small>
+        </div>
+      </label>
+      <label class="radio-opt">
+        <input type="radio" name="proj" value="aeqd">
+        <div>
+          <div>Azimuthal Equidistant</div>
+          <small>Abstands-korrekt · zentriert</small>
+        </div>
+      </label>
+      <label class="radio-opt">
+        <input type="radio" name="proj" value="merc">
+        <div>
+          <div>Mercator (lokal)</div>
+          <small>Winkeltreu · vertraut</small>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn btn-primary" id="generateBtn" disabled>SVG generieren</button>
+
+</div>
+
+<!-- RIGHT: PREVIEW -->
+<div class="preview-area">
+  <div class="preview-toolbar">
+    <span id="previewLabel">—</span>
+    <button class="btn btn-secondary" id="copyPathBtn" style="display:none;">Copy SVG</button>
+  </div>
+  <div class="preview-canvas" id="previewCanvas">
+    <div class="empty-state">
+      <span class="big">🌍</span>
+      <p>Auflösung wählen → Länder auswählen<br>dann SVG generieren</p>
+    </div>
+  </div>
+  <div class="download-bar" id="downloadBar" style="display:none;">
+    <span id="svgInfo"></span>
+    <button class="btn btn-secondary" id="downloadBtn">↓ SVG downloaden</button>
+  </div>
+</div>
+
+<!-- COLOR PICKER POPUP -->
+<div class="color-picker-popup" id="colorPickerPopup"></div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
