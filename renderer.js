@@ -4,8 +4,8 @@ const shp = require('shpjs');
 const fs  = require('fs');
 const path = require('path');
 
-// App folder — where the NE zip files live
-const APP_DIR = __dirname;
+// Natural Earth data folder
+const APP_DIR = path.join(__dirname, 'data');
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let worldFeatures   = [];
@@ -722,7 +722,6 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   }
 
   document.getElementById('previewLabel').textContent = selectedCountries.join(' + ');
-  document.getElementById('copyPathBtn').style.display = 'block';
   document.getElementById('downloadBar').style.display = 'flex';
   document.getElementById('svgInfo').textContent = `${selectedCountries.length} Länder · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
 });

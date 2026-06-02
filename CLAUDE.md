@@ -20,12 +20,13 @@ Map Projektion SVG/
 ├── renderer.js      # Gesamte App-Logik
 ├── package.json
 ├── CLAUDE.md
-├── ne_10m_admin_0_countries.zip   # Natural Earth 1:10m
-├── ne_10m_lakes.zip
-├── ne_10m_rivers_lake_centerlines.zip
-├── ne_50m_admin_0_countries.zip   # Natural Earth 1:50m
-├── ne_50m_lakes.zip
-├── ne_50m_rivers_lake_centerlines.zip
+├── data/                          # Natural Earth Shapefiles (ZIPs)
+│   ├── ne_10m_admin_0_countries.zip
+│   ├── ne_10m_lakes.zip
+│   ├── ne_10m_rivers_lake_centerlines.zip
+│   ├── ne_50m_admin_0_countries.zip
+│   ├── ne_50m_lakes.zip
+│   └── ne_50m_rivers_lake_centerlines.zip
 └── prototypes/                    # Alte HTML-Versionen (nicht auf GitHub)
     ├── country-svg-tool(7).html
     ├── country-svg-tool(17).html  ← beste Basis für Electron-Version
