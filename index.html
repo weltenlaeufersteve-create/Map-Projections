@@ -396,8 +396,8 @@
     overflow: hidden;
   }
   .mode-btn {
-    flex: 1; padding: 8px 6px;
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    flex: 1; padding: 10px 6px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
     border: none; background: transparent; color: var(--text-dim);
     cursor: pointer; transition: all 0.15s;
     letter-spacing: 0.06em; text-transform: uppercase;
@@ -428,9 +428,12 @@
 <div class="panel">
 
   <!-- MODE TOGGLE -->
-  <div class="mode-toggle">
-    <button class="mode-btn active" id="modeRegion">Region</button>
-    <button class="mode-btn" id="modeWorld">World</button>
+  <div>
+    <div class="section-label">Modus</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeRegion">⊞ Region</button>
+      <button class="mode-btn" id="modeWorld">⊕ World</button>
+    </div>
   </div>
 
   <hr class="divider">

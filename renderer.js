@@ -397,6 +397,7 @@ function generateSVG(features, bounds, colorMap, strokeW, strokeCol, waterOpts) 
   const scale = Math.min((W-2*margin)/(maxX-minX), (H-2*margin)/(maxY-minY));
   const mapW  = (maxX-minX)*scale, mapH = (maxY-minY)*scale;
   const offX  = (W-mapW)/2, offY = (H-mapH)/2;
+  const vx=offX, vy=offY, vw=mapW, vh=mapH;
 
   function toSVG(x, y) { return [ offX+(x-minX)*scale, H-offY-(y-minY)*scale ]; }
 
@@ -439,7 +440,6 @@ function generateSVG(features, bounds, colorMap, strokeW, strokeCol, waterOpts) 
                   + (riverSVG ? `\n  <g id="rivers">\n  ${riverSVG}\n  </g>` : '');
 
   const names = features.map(getCountryName).join(', ');
-  const vx=offX, vy=offY, vw=mapW, vh=mapH;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Countries: ${names} -->
