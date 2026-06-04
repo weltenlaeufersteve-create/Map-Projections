@@ -408,7 +408,9 @@
 
   /* WORLD / REGION visibility */
   .world-only { display: none !important; }
-  body.world-mode .world-only { display: flex !important; }
+  body.world-mode .world-only { display: block !important; }
+  body.world-mode .radio-opt.world-only { display: flex !important; }
+  body.world-mode .region-only { display: none !important; }
 </style>
 </head>
 <body>
@@ -558,14 +560,16 @@
         <input type="radio" name="proj" value="laea" checked>
         <div>
           <div>Azimuthal Equal Area</div>
-          <small>Flächentreu · zentriert auf Region</small>
+          <small class="region-only">Flächentreu · zentriert auf Region</small>
+          <small class="world-only">Flächentreu · 2 Hemisphären</small>
         </div>
       </label>
       <label class="radio-opt">
         <input type="radio" name="proj" value="aeqd">
         <div>
           <div>Azimuthal Equidistant</div>
-          <small>Abstands-korrekt · zentriert</small>
+          <small class="region-only">Abstands-korrekt · zentriert</small>
+          <small class="world-only">Abstands-korrekt · 2 Hemisphären</small>
         </div>
       </label>
       <label class="radio-opt">
@@ -573,6 +577,13 @@
         <div>
           <div>Mercator</div>
           <small>Winkeltreu · vertraut</small>
+        </div>
+      </label>
+      <label class="radio-opt world-only">
+        <input type="radio" name="proj" value="equirectangular">
+        <div>
+          <div>Equirectangular</div>
+          <small>Lon/Lat-Gitter · einfach</small>
         </div>
       </label>
       <label class="radio-opt world-only">

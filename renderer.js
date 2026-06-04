@@ -451,10 +451,67 @@ ${paths.join('\n')}
 </svg>`;
 }
 
+// ─── World Mode: Double Hemisphere (for azimuthal projections) ───────────────
+function renderHemiGroup(pathGen, allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, suffix) {
+  const sphere    = { type: 'Sphere' };
+  const sphereD   = pathGen(sphere) || '';
+  const countries = allFeatures.map(f => {
+    const name  = getCountryName(f);
+    const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : '#3a3a3a';
+    const d = pathGen(f); if (!d) return '';
+    return `  <path id="${name.toLowerCase().replace(/[^a-z0-9]/g,'_')}_${suffix}" d="${d}" fill="${color}" stroke="${strokeCol}" stroke-width="${strokeW}" stroke-linejoin="round"/>`;
+  }).filter(Boolean);
+
+  let waterPart = '';
+  if (waterOpts) {
+    if (waterOpts.showLakes && waterOpts.lakesFeatures.length) {
+      const ld = waterOpts.lakesFeatures.map(f => { const d=pathGen(f); return d?`<path d="${d}" fill="${waterOpts.lakeColor}" stroke="none"/>`:''}).filter(Boolean).join('\n  ');
+      if (ld) waterPart += `\n  <g id="lakes-${suffix}">\n  ${ld}\n  </g>`;
+    }
+    if (waterOpts.showRivers && waterOpts.riversFeatures.length) {
+      const rd = waterOpts.riversFeatures.map(f => { const d=pathGen(f); return d?`<path d="${d}" fill="none" stroke="${waterOpts.riverColor}" stroke-width="${waterOpts.riverWidth}" stroke-linecap="round"/>`:''}).filter(Boolean).join('\n  ');
+      if (rd) waterPart += `\n  <g id="rivers-${suffix}">\n  ${rd}\n  </g>`;
+    }
+  }
+  return { sphereD, countries, waterPart };
+}
+
+function generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts) {
+  const W = 2000, H = 1000, pad = 50, half = W / 2;
+  const sphere = { type: 'Sphere' };
+  const mkProj = (rotLon, x0, x1) => {
+    const base = projType === 'laea' ? d3geo.geoAzimuthalEqualArea() : d3geo.geoAzimuthalEquidistant();
+    return base.rotate([rotLon, 0]).fitExtent([[x0, pad], [x1, H - pad]], sphere);
+  };
+  const leftProj  = mkProj(0,   pad,        half - pad);
+  const rightProj = mkProj(180, half + pad,  W - pad);
+  const L = renderHemiGroup(d3geo.geoPath(leftProj),  allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'l');
+  const R = renderHemiGroup(d3geo.geoPath(rightProj), allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'r');
+  const names = selectedSet.join(', ') || 'Welt';
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Countries: ${names} | ${projType} · Double Hemisphere -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+  <path d="${L.sphereD}" fill="#1a2840"/>
+  <g id="countries-left" fill-rule="evenodd">
+${L.countries.join('\n')}
+  </g>${L.waterPart}
+  <path d="${L.sphereD}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+  <path d="${R.sphereD}" fill="#1a2840"/>
+  <g id="countries-right" fill-rule="evenodd">
+${R.countries.join('\n')}
+  </g>${R.waterPart}
+  <path d="${R.sphereD}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+</svg>`;
+}
+
 // ─── World Mode SVG Generation ───────────────────────────────────────────────
 function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts) {
-  const W = 2000, H = 1000;
+  // Azimuthal projections → double hemisphere side by side
+  if (projType === 'laea' || projType === 'aeqd') {
+    return generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts);
+  }
 
+  const W = 2000, H = 1000;
   let projection;
   const extent = [[40, 40], [W - 40, H - 40]];
   const sphere = { type: 'Sphere' };
@@ -464,12 +521,16 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
       projection = geoCahillKeyes().fitExtent(extent, sphere); break;
     case 'naturalearth':
       projection = d3geo.geoNaturalEarth1().fitExtent(extent, sphere); break;
-    case 'aeqd':
-      projection = d3geo.geoAzimuthalEquidistant().fitExtent(extent, sphere); break;
+    case 'equirectangular':
+      projection = d3geo.geoEquirectangular().fitExtent(extent, sphere); break;
     case 'merc':
-      projection = d3geo.geoMercator().fitExtent(extent, sphere); break;
-    default: // laea
-      projection = d3geo.geoAzimuthalEqualArea().fitExtent(extent, sphere);
+      // Mercator can't project the full sphere — use explicit scale for a clean 2:1 world map
+      projection = d3geo.geoMercator()
+        .scale((W - 80) / (2 * Math.PI))
+        .translate([W / 2, H / 2]);
+      break;
+    default:
+      projection = d3geo.geoNaturalEarth1().fitExtent(extent, sphere);
   }
 
   const pathGen = d3geo.geoPath(projection);
@@ -541,9 +602,9 @@ function applyMode(m) {
   document.getElementById('modeWorld').classList.toggle('active', mode === 'world');
   document.body.classList.toggle('world-mode', mode === 'world');
 
-  // If a world-only projection is selected while switching back to region, reset to laea
   const proj = document.querySelector('input[name="proj"]:checked');
-  if (mode === 'region' && (proj.value === 'cahill-keyes' || proj.value === 'naturalearth')) {
+  // Switching back to Region: world-only projections → switch back to laea
+  if (mode === 'region' && ['cahill-keyes', 'naturalearth', 'equirectangular'].includes(proj.value)) {
     document.querySelector('input[name="proj"][value="laea"]').checked = true;
   }
 }
