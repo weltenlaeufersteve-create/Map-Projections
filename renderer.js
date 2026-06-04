@@ -525,7 +525,9 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
     return generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts);
   }
 
-  const W = 2000, H = 1000;
+  const W = 2000;
+  // Mercator needs a taller canvas to show ±80° without clipping the poles
+  let H = projType === 'merc' ? 1600 : 1000;
   let projection;
   const extent = [[40, 40], [W - 40, H - 40]];
   const sphere = { type: 'Sphere' };
@@ -538,7 +540,7 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
     case 'equirectangular':
       projection = d3geo.geoEquirectangular().fitExtent(extent, sphere); break;
     case 'merc':
-      // Mercator can't project the full sphere — use explicit scale for a clean 2:1 world map
+      // Explicit scale fills canvas width; H=1600 gives ±81° latitude visible
       projection = d3geo.geoMercator()
         .scale((W - 80) / (2 * Math.PI))
         .translate([W / 2, H / 2]);
