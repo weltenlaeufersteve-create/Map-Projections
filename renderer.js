@@ -321,7 +321,7 @@ function projectWaterRing(ring, projectFn) {
   });
 }
 
-function renderLakes(feats, bbox, projectFn, toSVG, color) {
+function renderLakes(feats, bbox, projectFn, toSVG, color, clipper) {
   const paths = [];
   for (const f of feats) {
     const geom = f.geometry; if (!geom) continue;
@@ -329,20 +329,21 @@ function renderLakes(feats, bbox, projectFn, toSVG, color) {
     for (const poly of polys) {
       if (!poly || !poly[0] || !poly[0][0]) continue;
       if (!ringIntersectsBBox(poly[0], bbox)) continue;
-      let d = '';
-      for (const ring of poly.map(r => projectWaterRing(r, projectFn))) {
-        const pts = ring.filter(p => !isNaN(p[0]) && !isNaN(p[1]));
-        if (pts.length < 2) continue;
-        const sp = pts.map(p => toSVG(p[0], p[1]));
-        d += `M ${sp[0][0].toFixed(2)},${sp[0][1].toFixed(2)}` + sp.slice(1).map(p=>` L ${p[0].toFixed(2)},${p[1].toFixed(2)}`).join('') + ' Z ';
-      }
-      if (d) paths.push(`<path d="${d.trim()}" fill="${color}" stroke="none"/>`);
+      // Project rings to SVG coordinate space, then clip to viewport
+      const svgRings = poly
+        .map(ring => projectWaterRing(ring, projectFn)
+          .filter(p => !isNaN(p[0]) && !isNaN(p[1]))
+          .map(p => toSVG(p[0], p[1])))
+        .filter(r => r.length >= 3);
+      if (!svgRings.length) continue;
+      const d = clipper({ type: 'Polygon', coordinates: svgRings });
+      if (d) paths.push(`<path d="${d}" fill="${color}" stroke="none"/>`);
     }
   }
   return paths.join('\n  ');
 }
 
-function renderRivers(feats, bbox, projectFn, toSVG, color, width) {
+function renderRivers(feats, bbox, projectFn, toSVG, color, width, clipper) {
   const lines = [];
   for (const f of feats) {
     const geom = f.geometry; if (!geom) continue;
@@ -354,11 +355,13 @@ function renderRivers(feats, bbox, projectFn, toSVG, color, width) {
       const fp = line[0];
       if (!fp || !Array.isArray(fp) || typeof fp[0] !== 'number') continue;
       if (!ringIntersectsBBox(line, bbox)) continue;
-      const pts = projectWaterRing(line, projectFn).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
-      if (pts.length < 2) continue;
-      const sp = pts.map(p => toSVG(p[0], p[1]));
-      const d = `M ${sp[0][0].toFixed(2)},${sp[0][1].toFixed(2)}` + sp.slice(1).map(p=>` L ${p[0].toFixed(2)},${p[1].toFixed(2)}`).join('');
-      lines.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`);
+      // Project to SVG space, then clip to viewport
+      const svgPts = projectWaterRing(line, projectFn)
+        .filter(p => !isNaN(p[0]) && !isNaN(p[1]))
+        .map(p => toSVG(p[0], p[1]));
+      if (svgPts.length < 2) continue;
+      const d = clipper({ type: 'LineString', coordinates: svgPts });
+      if (d) lines.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`);
     }
   }
   return lines.join('\n  ');
@@ -422,10 +425,14 @@ function generateSVG(features, bounds, colorMap, strokeW, strokeCol, waterOpts) 
   let lakeSVG = '', riverSVG = '';
   if (waterOpts) {
     const projectWaterPt = (lon, lat) => waterOpts.projectPoint([lon, lat]);
+    // Clip water paths hard to the SVG viewport — no stray geometry outside the frame
+    const clipper = d3geo.geoPath(
+      d3geo.geoIdentity().clipExtent([[vx, vy], [vx + vw, vy + vh]])
+    );
     if (waterOpts.showLakes && waterOpts.lakesFeatures.length)
-      lakeSVG = renderLakes(waterOpts.lakesFeatures, waterOpts.bbox, projectWaterPt, toSVG, waterOpts.lakeColor);
+      lakeSVG = renderLakes(waterOpts.lakesFeatures, waterOpts.bbox, projectWaterPt, toSVG, waterOpts.lakeColor, clipper);
     if (waterOpts.showRivers && waterOpts.riversFeatures.length)
-      riverSVG = renderRivers(waterOpts.riversFeatures, waterOpts.bbox, projectWaterPt, toSVG, waterOpts.riverColor, waterOpts.riverWidth);
+      riverSVG = renderRivers(waterOpts.riversFeatures, waterOpts.bbox, projectWaterPt, toSVG, waterOpts.riverColor, waterOpts.riverWidth, clipper);
   }
 
   const waterPart = (lakeSVG  ? `\n  <g id="lakes">\n  ${lakeSVG}\n  </g>` : '')
