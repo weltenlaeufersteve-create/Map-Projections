@@ -480,7 +480,9 @@ function generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, 
   const W = 2000, H = 1000, pad = 50, half = W / 2;
   const sphere = { type: 'Sphere' };
   const mkProj = (rotLon, x0, x1) => {
-    const base = projType === 'laea' ? d3geo.geoAzimuthalEqualArea() : d3geo.geoAzimuthalEquidistant();
+    const base = projType === 'laea'
+      ? d3geo.geoAzimuthalEqualArea()
+      : d3geo.geoAzimuthalEquidistant().clipAngle(90);
     return base.rotate([rotLon, 0]).fitExtent([[x0, pad], [x1, H - pad]], sphere);
   };
   const leftProj  = mkProj(90,  pad,        half - pad);   // center 90°W → Americas
