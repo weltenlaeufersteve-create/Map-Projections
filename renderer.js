@@ -452,9 +452,7 @@ ${paths.join('\n')}
 }
 
 // ─── World Mode: Double Hemisphere (for azimuthal projections) ───────────────
-function renderHemiGroup(pathGen, allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, suffix) {
-  const sphere    = { type: 'Sphere' };
-  const sphereD   = pathGen(sphere) || '';
+function renderHemiPaths(pathGen, allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, suffix) {
   const countries = allFeatures.map(f => {
     const name  = getCountryName(f);
     const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : '#3a3a3a';
@@ -466,43 +464,57 @@ function renderHemiGroup(pathGen, allFeatures, selectedSet, colorMap, strokeW, s
   if (waterOpts) {
     if (waterOpts.showLakes && waterOpts.lakesFeatures.length) {
       const ld = waterOpts.lakesFeatures.map(f => { const d=pathGen(f); return d?`<path d="${d}" fill="${waterOpts.lakeColor}" stroke="none"/>`:''}).filter(Boolean).join('\n  ');
-      if (ld) waterPart += `\n  <g id="lakes-${suffix}">\n  ${ld}\n  </g>`;
+      if (ld) waterPart += `\n    <g id="lakes-${suffix}">\n    ${ld}\n    </g>`;
     }
     if (waterOpts.showRivers && waterOpts.riversFeatures.length) {
       const rd = waterOpts.riversFeatures.map(f => { const d=pathGen(f); return d?`<path d="${d}" fill="none" stroke="${waterOpts.riverColor}" stroke-width="${waterOpts.riverWidth}" stroke-linecap="round"/>`:''}).filter(Boolean).join('\n  ');
-      if (rd) waterPart += `\n  <g id="rivers-${suffix}">\n  ${rd}\n  </g>`;
+      if (rd) waterPart += `\n    <g id="rivers-${suffix}">\n    ${rd}\n    </g>`;
     }
   }
-  return { sphereD, countries, waterPart };
+  return { countries, waterPart };
 }
 
 function generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts) {
   const W = 2000, H = 1000, pad = 50, half = W / 2;
   const sphere = { type: 'Sphere' };
+  // Circle geometry is deterministic from the fit extents (both are 900×900)
+  const r   = (H - 2 * pad) / 2;  // 450
+  const lCx = half / 2,       lCy = H / 2;  // 500, 500
+  const rCx = half + half / 2, rCy = H / 2; // 1500, 500
+
   const mkProj = (rotLon, x0, x1) => {
     const base = projType === 'laea'
       ? d3geo.geoAzimuthalEqualArea()
       : d3geo.geoAzimuthalEquidistant().clipAngle(90);
     return base.rotate([rotLon, 0]).fitExtent([[x0, pad], [x1, H - pad]], sphere);
   };
-  const leftProj  = mkProj(90,  pad,        half - pad);   // center 90°W → Americas
-  const rightProj = mkProj(-90, half + pad,  W - pad);   // center 90°E → Europe/Asia/Africa
-  const L = renderHemiGroup(d3geo.geoPath(leftProj),  allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'l');
-  const R = renderHemiGroup(d3geo.geoPath(rightProj), allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'r');
+  const leftProj  = mkProj(90,  pad,        half - pad);  // 90°W → Americas
+  const rightProj = mkProj(-90, half + pad,  W - pad);    // 90°E → Europe/Asia/Africa
+  const L = renderHemiPaths(d3geo.geoPath(leftProj),  allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'l');
+  const R = renderHemiPaths(d3geo.geoPath(rightProj), allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'r');
   const names = selectedSet.join(', ') || 'Welt';
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Countries: ${names} | ${projType} · Double Hemisphere -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
-  <path d="${L.sphereD}" fill="#1a2840"/>
-  <g id="countries-left" fill-rule="evenodd">
+  <defs>
+    <clipPath id="clip-l"><circle cx="${lCx}" cy="${lCy}" r="${r}"/></clipPath>
+    <clipPath id="clip-r"><circle cx="${rCx}" cy="${rCy}" r="${r}"/></clipPath>
+  </defs>
+  <circle cx="${lCx}" cy="${lCy}" r="${r}" fill="#1a2840"/>
+  <g id="countries-left" fill-rule="evenodd" clip-path="url(#clip-l)">
 ${L.countries.join('\n')}
-  </g>${L.waterPart}
-  <path d="${L.sphereD}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
-  <path d="${R.sphereD}" fill="#1a2840"/>
-  <g id="countries-right" fill-rule="evenodd">
+  </g>
+  <g clip-path="url(#clip-l)">${L.waterPart}
+  </g>
+  <circle cx="${lCx}" cy="${lCy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+  <circle cx="${rCx}" cy="${rCy}" r="${r}" fill="#1a2840"/>
+  <g id="countries-right" fill-rule="evenodd" clip-path="url(#clip-r)">
 ${R.countries.join('\n')}
-  </g>${R.waterPart}
-  <path d="${R.sphereD}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
+  </g>
+  <g clip-path="url(#clip-r)">${R.waterPart}
+  </g>
+  <circle cx="${rCx}" cy="${rCy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/>
 </svg>`;
 }
 
