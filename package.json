@@ -6,6 +6,8 @@
     "start": "electron ."
   },
   "dependencies": {
+    "d3-geo": "^2.0.2",
+    "d3-geo-polygon": "^1.9.0",
     "shpjs": "^3.6.3"
   },
   "devDependencies": {

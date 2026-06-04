@@ -1,8 +1,10 @@
 'use strict';
 const { ipcRenderer } = require('electron');
-const shp = require('shpjs');
-const fs  = require('fs');
+const shp  = require('shpjs');
+const fs   = require('fs');
 const path = require('path');
+const d3geo           = require('d3-geo');
+const { geoCahillKeyes } = require('d3-geo-polygon');
 
 // Natural Earth data folder
 const APP_DIR = path.join(__dirname, 'data');
@@ -20,6 +22,7 @@ let currentSVG      = '';
 let colorTargetCountry = null;
 let comboCounter    = Math.max(10, ...combos.map(c => c.id));
 let resolution      = localStorage.getItem('ne_resolution') || '50m';
+let mode            = localStorage.getItem('app_mode') || 'region';
 
 const PALETTE = [
   '#E8A838','#5B8DB8','#4CAF82','#C45A5A','#9B59B6',
@@ -441,6 +444,74 @@ ${paths.join('\n')}
 </svg>`;
 }
 
+// ─── World Mode SVG Generation ───────────────────────────────────────────────
+function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts) {
+  const W = 2000, H = 1000;
+
+  let projection;
+  const extent = [[40, 40], [W - 40, H - 40]];
+  const sphere = { type: 'Sphere' };
+
+  switch (projType) {
+    case 'cahill-keyes':
+      projection = geoCahillKeyes().fitExtent(extent, sphere); break;
+    case 'naturalearth':
+      projection = d3geo.geoNaturalEarth1().fitExtent(extent, sphere); break;
+    case 'aeqd':
+      projection = d3geo.geoAzimuthalEquidistant().fitExtent(extent, sphere); break;
+    case 'merc':
+      projection = d3geo.geoMercator().fitExtent(extent, sphere); break;
+    default: // laea
+      projection = d3geo.geoAzimuthalEqualArea().fitExtent(extent, sphere);
+  }
+
+  const pathGen = d3geo.geoPath(projection);
+
+  // Ocean background
+  const sphereD = pathGen(sphere) || '';
+
+  // Countries
+  const countryPaths = allFeatures.map(f => {
+    const name  = getCountryName(f);
+    const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : '#3a3a3a';
+    const d = pathGen(f);
+    if (!d) return '';
+    return `  <path id="${name.toLowerCase().replace(/[^a-z0-9]/g,'_')}" d="${d}" fill="${color}" stroke="${strokeCol}" stroke-width="${strokeW}" stroke-linejoin="round"/>`;
+  }).filter(Boolean);
+
+  // Water layers via d3-geo (simpler than the region-mode custom water renderer)
+  let lakesSVG = '', riversSVG = '';
+  if (waterOpts) {
+    if (waterOpts.showLakes && waterOpts.lakesFeatures.length) {
+      lakesSVG = waterOpts.lakesFeatures.map(f => {
+        const d = pathGen(f); if (!d) return '';
+        return `<path d="${d}" fill="${waterOpts.lakeColor}" stroke="none"/>`;
+      }).filter(Boolean).join('\n  ');
+    }
+    if (waterOpts.showRivers && waterOpts.riversFeatures.length) {
+      riversSVG = waterOpts.riversFeatures.map(f => {
+        const d = pathGen(f); if (!d) return '';
+        return `<path d="${d}" fill="none" stroke="${waterOpts.riverColor}" stroke-width="${waterOpts.riverWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }).filter(Boolean).join('\n  ');
+    }
+  }
+
+  const waterPart = (lakesSVG  ? `\n  <g id="lakes">\n  ${lakesSVG}\n  </g>` : '')
+                  + (riversSVG ? `\n  <g id="rivers">\n  ${riversSVG}\n  </g>` : '');
+
+  const names = selectedSet.join(', ') || 'Welt';
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Countries: ${names} -->
+<!-- Natural Earth ${resolution} | Projektion: ${projType} | World Mode -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
+  <path d="${sphereD}" fill="#1a2840"/>
+  <g id="countries" fill-rule="evenodd">
+${countryPaths.join('\n')}
+  </g>${waterPart}
+</svg>`;
+}
+
 // ─── UI Helpers ───────────────────────────────────────────────────────────────
 function pill(msg, type) {
   return `<div class="status-pill ${type}"><div class="dot ${type==='loading'?'pulse':''}"></div>${msg}</div>`;
@@ -453,6 +524,25 @@ function setStatus(msg, type) {
 document.getElementById('winMin').addEventListener('click', () => ipcRenderer.send('win:minimize'));
 document.getElementById('winMax').addEventListener('click', () => ipcRenderer.send('win:maximize'));
 document.getElementById('winClose').addEventListener('click', () => ipcRenderer.send('win:close'));
+
+// ─── Mode toggle ──────────────────────────────────────────────────────────────
+function applyMode(m) {
+  mode = m;
+  localStorage.setItem('app_mode', mode);
+
+  document.getElementById('modeRegion').classList.toggle('active', mode === 'region');
+  document.getElementById('modeWorld').classList.toggle('active', mode === 'world');
+  document.body.classList.toggle('world-mode', mode === 'world');
+
+  // If a world-only projection is selected while switching back to region, reset to laea
+  const proj = document.querySelector('input[name="proj"]:checked');
+  if (mode === 'region' && (proj.value === 'cahill-keyes' || proj.value === 'naturalearth')) {
+    document.querySelector('input[name="proj"][value="laea"]').checked = true;
+  }
+}
+
+document.getElementById('modeRegion').addEventListener('click', () => applyMode('region'));
+document.getElementById('modeWorld').addEventListener('click',  () => applyMode('world'));
 
 // ─── Manual expand toggles ────────────────────────────────────────────────────
 function setupToggle(btnId, bodyId) {
@@ -684,33 +774,38 @@ document.getElementById('islandThreshold').addEventListener('input', e => {
 
 // ─── Generate ─────────────────────────────────────────────────────────────────
 document.getElementById('generateBtn').addEventListener('click', () => {
-  if (!worldFeatures.length || !selectedCountries.length) return;
-
-  const features = worldFeatures.filter(f => selectedCountries.includes(getCountryName(f)));
-  if (!features.length) { setStatus('Keine passenden Länder', 'err'); return; }
+  if (!worldFeatures.length) return;
+  if (!selectedCountries.length && mode === 'region') return;
 
   const projType  = document.querySelector('input[name="proj"]:checked').value;
   const strokeW   = document.getElementById('strokeWidth').value;
   const strokeCol = document.getElementById('strokeColor').value;
-  const threshold = parseInt(document.getElementById('islandThreshold').value);
-
-  const filtered = filterIslands(features, threshold);
-  const { features: projected, bounds, projectPoint } = projectFeatures(filtered, projType);
-
-  const rawBBox = getFeaturesBBox(filtered);
-  const bbox    = { minLon: rawBBox.minLon-3, minLat: rawBBox.minLat-3, maxLon: rawBBox.maxLon+3, maxLat: rawBBox.maxLat+3 };
 
   const waterOpts = (lakesFeatures.length || riversFeatures.length) ? {
-    bbox, projectPoint,
-    showLakes:  document.getElementById('showLakes')?.checked  ?? true,
-    showRivers: document.getElementById('showRivers')?.checked ?? true,
-    lakeColor:  document.getElementById('lakeColor')?.value    ?? '#5b8db8',
-    riverColor: document.getElementById('riverColor')?.value   ?? '#7ab3d4',
-    riverWidth: document.getElementById('riverWidth')?.value   ?? '0.8',
+    showLakes:     document.getElementById('showLakes')?.checked  ?? true,
+    showRivers:    document.getElementById('showRivers')?.checked ?? true,
+    lakeColor:     document.getElementById('lakeColor')?.value    ?? '#5b8db8',
+    riverColor:    document.getElementById('riverColor')?.value   ?? '#7ab3d4',
+    riverWidth:    document.getElementById('riverWidth')?.value   ?? '0.8',
     lakesFeatures, riversFeatures,
   } : null;
 
-  currentSVG = generateSVG(projected, bounds, countryColors, strokeW, strokeCol, waterOpts);
+  if (mode === 'world') {
+    currentSVG = generateWorldSVG(worldFeatures, selectedCountries, countryColors, projType, strokeW, strokeCol, waterOpts);
+  } else {
+    const features = worldFeatures.filter(f => selectedCountries.includes(getCountryName(f)));
+    if (!features.length) { setStatus('Keine passenden Länder', 'err'); return; }
+
+    const threshold = parseInt(document.getElementById('islandThreshold').value);
+    const filtered  = filterIslands(features, threshold);
+    const { features: projected, bounds, projectPoint } = projectFeatures(filtered, projType);
+
+    const rawBBox = getFeaturesBBox(filtered);
+    const bbox    = { minLon: rawBBox.minLon-3, minLat: rawBBox.minLat-3, maxLon: rawBBox.maxLon+3, maxLat: rawBBox.maxLat+3 };
+
+    const regionWaterOpts = waterOpts ? { ...waterOpts, bbox, projectPoint } : null;
+    currentSVG = generateSVG(projected, bounds, countryColors, strokeW, strokeCol, regionWaterOpts);
+  }
 
   const canvas = document.getElementById('previewCanvas');
   canvas.innerHTML = currentSVG;
@@ -721,9 +816,12 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     svg.removeAttribute('width'); svg.removeAttribute('height');
   }
 
-  document.getElementById('previewLabel').textContent = selectedCountries.join(' + ');
+  const label = mode === 'world'
+    ? (selectedCountries.length ? selectedCountries.join(' + ') + ' · World' : 'Welt')
+    : selectedCountries.join(' + ');
+  document.getElementById('previewLabel').textContent = label;
   document.getElementById('downloadBar').style.display = 'flex';
-  document.getElementById('svgInfo').textContent = `${selectedCountries.length} Länder · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
+  document.getElementById('svgInfo').textContent = `${mode === 'world' ? worldFeatures.length + ' Länder (Welt)' : selectedCountries.length + ' Länder'} · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
 });
 
 // ─── Download + Copy ──────────────────────────────────────────────────────────
@@ -743,6 +841,7 @@ document.getElementById('copyPathBtn').addEventListener('click', () => {
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
+applyMode(mode);
 updateResolutionUI();
 autoLoad();
 renderComboList();

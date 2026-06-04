@@ -387,6 +387,28 @@
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* MODE TOGGLE */
+  .mode-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .mode-btn {
+    flex: 1; padding: 8px 6px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    border: none; background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .mode-btn + .mode-btn { border-left: 1px solid var(--border); }
+  .mode-btn:hover { color: var(--text); background: var(--surface2); }
+  .mode-btn.active { background: var(--accent); color: #0f0e0c; font-weight: 500; }
+
+  /* WORLD / REGION visibility */
+  .world-only { display: none !important; }
+  body.world-mode .world-only { display: flex !important; }
 </style>
 </head>
 <body>
@@ -404,6 +426,14 @@
 
 <!-- LEFT PANEL -->
 <div class="panel">
+
+  <!-- MODE TOGGLE -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeRegion">Region</button>
+    <button class="mode-btn" id="modeWorld">World</button>
+  </div>
+
+  <hr class="divider">
 
   <!-- 01 RESOLUTION + AUTO-LOAD -->
   <div>
@@ -538,8 +568,22 @@
       <label class="radio-opt">
         <input type="radio" name="proj" value="merc">
         <div>
-          <div>Mercator (lokal)</div>
+          <div>Mercator</div>
           <small>Winkeltreu · vertraut</small>
+        </div>
+      </label>
+      <label class="radio-opt world-only">
+        <input type="radio" name="proj" value="naturalearth">
+        <div>
+          <div>Natural Earth</div>
+          <small>Kompromiss-Projektion · Weltkarte</small>
+        </div>
+      </label>
+      <label class="radio-opt world-only">
+        <input type="radio" name="proj" value="cahill-keyes">
+        <div>
+          <div>Cahill-Keyes</div>
+          <small>Butterfly · Oktaeder · einzigartig</small>
         </div>
       </label>
     </div>
