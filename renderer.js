@@ -452,6 +452,13 @@ ${paths.join('\n')}
 }
 
 // ─── World Mode: Double Hemisphere (for azimuthal projections) ───────────────
+// ─── World Mode: reference line helper ───────────────────────────────────────
+function latLineGeoJSON(lat) {
+  const coords = [];
+  for (let lon = -180; lon <= 180; lon++) coords.push([lon, lat]);
+  return { type: 'LineString', coordinates: coords };
+}
+
 // ─── World Mode SVG Generation ───────────────────────────────────────────────
 function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW, strokeCol, waterOpts) {
   const W = 2000, H = 1000;
@@ -470,10 +477,46 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
 
   const pathGen = d3geo.geoPath(projection);
 
-  // Ocean background
+  // ── Raster options from UI ──────────────────────────────────────────────────
+  const oceanColor    = document.getElementById('oceanColor')?.value  ?? '#1a2840';
+  const showGraticule = document.getElementById('showGraticule')?.checked ?? true;
+  const gratColor     = document.getElementById('gratColor')?.value   ?? '#1e3a5a';
+  const showEquator   = document.getElementById('showEquator')?.checked  ?? true;
+  const showTropics   = document.getElementById('showTropics')?.checked  ?? true;
+  const showPolar     = document.getElementById('showPolar')?.checked    ?? true;
+
+  // ── Ocean background ────────────────────────────────────────────────────────
   const sphereD = pathGen(sphere) || '';
 
-  // Countries
+  // ── Graticule (15° grid) ────────────────────────────────────────────────────
+  let gratSVG = '';
+  if (showGraticule) {
+    const d = pathGen(d3geo.geoGraticule().step([15, 15])());
+    if (d) gratSVG = `  <path id="graticule" d="${d}" fill="none" stroke="${gratColor}" stroke-width="0.4"/>`;
+  }
+
+  // ── Reference lines ─────────────────────────────────────────────────────────
+  const refPaths = [];
+  if (showEquator) {
+    const d = pathGen(latLineGeoJSON(0));
+    if (d) refPaths.push(`    <path id="equator" d="${d}" fill="none" stroke="rgba(61,159,255,0.55)" stroke-width="0.9"/>`);
+  }
+  if (showTropics) {
+    [23.5, -23.5].forEach(lat => {
+      const d = pathGen(latLineGeoJSON(lat));
+      if (d) refPaths.push(`    <path d="${d}" fill="none" stroke="rgba(255,200,70,0.45)" stroke-width="0.5" stroke-dasharray="5,4"/>`);
+    });
+  }
+  if (showPolar) {
+    [66.5, -66.5].forEach(lat => {
+      const d = pathGen(latLineGeoJSON(lat));
+      if (d) refPaths.push(`    <path d="${d}" fill="none" stroke="rgba(160,200,255,0.35)" stroke-width="0.5" stroke-dasharray="3,5"/>`);
+    });
+  }
+  const refLinesSVG = refPaths.length
+    ? `  <g id="reference-lines">\n${refPaths.join('\n')}\n  </g>` : '';
+
+  // ── Countries ───────────────────────────────────────────────────────────────
   const countryPaths = allFeatures.map(f => {
     const name  = getCountryName(f);
     const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : '#3a3a3a';
@@ -482,7 +525,7 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
     return `  <path id="${name.toLowerCase().replace(/[^a-z0-9]/g,'_')}" d="${d}" fill="${color}" stroke="${strokeCol}" stroke-width="${strokeW}" stroke-linejoin="round"/>`;
   }).filter(Boolean);
 
-  // Water layers via d3-geo (simpler than the region-mode custom water renderer)
+  // ── Water layers ─────────────────────────────────────────────────────────────
   let lakesSVG = '', riversSVG = '';
   if (waterOpts) {
     if (waterOpts.showLakes && waterOpts.lakesFeatures.length) {
@@ -498,20 +541,21 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
       }).filter(Boolean).join('\n  ');
     }
   }
-
-  const waterPart = (lakesSVG  ? `\n  <g id="lakes">\n  ${lakesSVG}\n  </g>` : '')
+  const waterPart = (lakesSVG  ? `\n  <g id="lakes">\n  ${lakesSVG}\n  </g>`  : '')
                   + (riversSVG ? `\n  <g id="rivers">\n  ${riversSVG}\n  </g>` : '');
 
   const names = selectedSet.join(', ') || 'Welt';
 
+  // ── Layer order: ocean → grid → ref lines → countries → water → outline ────
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Countries: ${names} -->
 <!-- Natural Earth ${resolution} | Projektion: ${projType} | World Mode -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
-  <path d="${sphereD}" fill="#1a2840"/>
-  <g id="countries" fill-rule="evenodd">
+  <path id="ocean" d="${sphereD}" fill="${oceanColor}"/>
+${gratSVG ? gratSVG + '\n' : ''}${refLinesSVG ? refLinesSVG + '\n' : ''}  <g id="countries" fill-rule="evenodd">
 ${countryPaths.join('\n')}
   </g>${waterPart}
+  <path id="sphere-outline" d="${sphereD}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
 </svg>`;
 }
 
