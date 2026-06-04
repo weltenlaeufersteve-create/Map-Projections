@@ -64,10 +64,10 @@ function nodeBufferToArrayBuffer(buf) {
 // ─── Resolution UI ────────────────────────────────────────────────────────────
 function updateResolutionUI() {
   ['10m', '50m'].forEach(res => {
-    const paths  = getNEPaths(res);
-    const avail  = fileExists(paths.countries);
-    const optEl  = document.getElementById(`resOpt${res.replace('m','M')}`);
-    const availEl = document.getElementById(`resAvail${res.replace('m','M')}`);
+    const paths   = getNEPaths(res);
+    const avail   = fileExists(paths.countries);
+    const optEl   = document.getElementById(`resOpt${res}`);
+    const availEl = document.getElementById(`resAvail${res}`);
     if (avail) {
       availEl.textContent = '✓ vorhanden';
       optEl.classList.remove('unavail');
@@ -76,7 +76,7 @@ function updateResolutionUI() {
       optEl.classList.add('unavail');
     }
     if (res === resolution) {
-      document.getElementById(`res${res.replace('m','M')}`).checked = true;
+      document.getElementById(`res${res}`).checked = true;
       optEl.classList.add('active');
     }
   });
@@ -566,7 +566,7 @@ setupToggle('manualToggle2', 'manualBody2');
 // ─── Resolution toggle ────────────────────────────────────────────────────────
 document.querySelectorAll('input[name="res"]').forEach(radio => {
   radio.addEventListener('change', async () => {
-    if (radio.value === resolution) return;
+    if (radio.value === resolution && worldFeatures.length) return;
     resolution = radio.value;
     localStorage.setItem('ne_resolution', resolution);
 
