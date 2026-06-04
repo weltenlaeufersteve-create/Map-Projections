@@ -483,8 +483,8 @@ function generateDoubleHemisphere(allFeatures, selectedSet, colorMap, projType, 
     const base = projType === 'laea' ? d3geo.geoAzimuthalEqualArea() : d3geo.geoAzimuthalEquidistant();
     return base.rotate([rotLon, 0]).fitExtent([[x0, pad], [x1, H - pad]], sphere);
   };
-  const leftProj  = mkProj(0,   pad,        half - pad);
-  const rightProj = mkProj(180, half + pad,  W - pad);
+  const leftProj  = mkProj(90,  pad,        half - pad);   // center 90°W → Americas
+  const rightProj = mkProj(-90, half + pad,  W - pad);   // center 90°E → Europe/Asia/Africa
   const L = renderHemiGroup(d3geo.geoPath(leftProj),  allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'l');
   const R = renderHemiGroup(d3geo.geoPath(rightProj), allFeatures, selectedSet, colorMap, strokeW, strokeCol, waterOpts, 'r');
   const names = selectedSet.join(', ') || 'Welt';
