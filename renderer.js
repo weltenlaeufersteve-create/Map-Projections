@@ -9,6 +9,12 @@ const { geoCahillKeyes } = require('d3-geo-polygon');
 // Natural Earth data folder
 const APP_DIR = path.join(__dirname, 'data');
 
+// Migration data (bundled in data/)
+let migrationData = null;
+try {
+  migrationData = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'migration-routes.json'), 'utf8'));
+} catch(e) { console.warn('migration-routes.json not found:', e.message); }
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let worldFeatures   = [];
 let lakesFeatures   = [];
@@ -452,6 +458,45 @@ ${paths.join('\n')}
 }
 
 // ─── World Mode: Double Hemisphere (for azimuthal projections) ───────────────
+// ─── Migration Routes renderer ───────────────────────────────────────────────
+function renderMigrationRoutes(data, pathGen, projection, showLabels) {
+  const routePaths = [], stopCircles = [], labelTexts = [];
+
+  // Routes — one LineString per segment
+  for (const route of Object.values(data.routes)) {
+    for (const seg of route.segments) {
+      const d = pathGen({ type: 'LineString', coordinates: seg.points });
+      if (!d) continue;
+      const dash = seg.solid ? '' : ` stroke-dasharray="8,5"`;
+      routePaths.push(`    <path d="${d}" fill="none" stroke="${route.color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"${dash}/>`);
+    }
+  }
+
+  // Stops — projected individually
+  for (const stop of data.stops) {
+    const pt = projection(stop.ll);
+    if (!pt || isNaN(pt[0]) || isNaN(pt[1])) continue;
+    const [x, y] = pt;
+    const fill    = stop.main ? '#ffffff' : '#e8c547';
+    const strk    = stop.main ? '#e8c547' : 'rgba(255,255,255,0.45)';
+    const strW    = stop.main ? 1.5 : 1;
+    stopCircles.push(`    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${stop.size}" fill="${fill}" stroke="${strk}" stroke-width="${strW}" opacity="0.95"/>`);
+
+    if (showLabels && stop.label) {
+      const label = stop.label.replace('\n', ' ');
+      const fs    = stop.main ? 10 : 8;
+      const fw    = stop.main ? '500' : '400';
+      labelTexts.push(`    <text x="${(x + stop.size + 3).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" font-size="${fs}" font-weight="${fw}" fill="rgba(255,255,255,0.88)" font-family="monospace">${label}</text>`);
+    }
+  }
+
+  let out = '';
+  if (routePaths.length)  out += `  <g id="migration-routes">\n${routePaths.join('\n')}\n  </g>\n`;
+  if (stopCircles.length) out += `  <g id="migration-stops">\n${stopCircles.join('\n')}\n  </g>\n`;
+  if (labelTexts.length)  out += `  <g id="migration-labels">\n${labelTexts.join('\n')}\n  </g>\n`;
+  return out;
+}
+
 // ─── World Mode: reference line helper ───────────────────────────────────────
 function latLineGeoJSON(lat) {
   const coords = [];
@@ -478,8 +523,10 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
   const pathGen = d3geo.geoPath(projection);
 
   // ── Raster options from UI ──────────────────────────────────────────────────
-  const oceanColor    = document.getElementById('oceanColor')?.value   ?? '#1a2840';
-  const neutralColor  = document.getElementById('neutralColor')?.value ?? '#3a3a3a';
+  const oceanColor          = document.getElementById('oceanColor')?.value          ?? '#1a2840';
+  const neutralColor        = document.getElementById('neutralColor')?.value        ?? '#3a3a3a';
+  const showMigration       = !!(migrationData && document.getElementById('showMigration')?.checked);
+  const showMigrationLabels = document.getElementById('showMigrationLabels')?.checked ?? true;
   const showGraticule = document.getElementById('showGraticule')?.checked ?? true;
   const gratColor     = document.getElementById('gratColor')?.value   ?? '#1e3a5a';
   const showEquator   = document.getElementById('showEquator')?.checked  ?? true;
@@ -545,18 +592,23 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
   const waterPart = (lakesSVG  ? `\n  <g id="lakes">\n  ${lakesSVG}\n  </g>`  : '')
                   + (riversSVG ? `\n  <g id="rivers">\n  ${riversSVG}\n  </g>` : '');
 
-  const names = selectedSet.join(', ') || 'Welt';
+  // ── Migration routes ────────────────────────────────────────────────────────
+  const migrationPart = showMigration
+    ? renderMigrationRoutes(migrationData, pathGen, projection, showMigrationLabels)
+    : '';
 
-  // ── Layer order: ocean → grid → ref lines → countries → water → outline ────
+  const names = selectedSet.join(', ') || 'World';
+
+  // ── Layer order: ocean → grid → ref lines → countries → water → migration → outline
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Countries: ${names} -->
-<!-- Natural Earth ${resolution} | Projektion: ${projType} | World Mode -->
+<!-- Natural Earth ${resolution} | Projection: ${projType} | World Mode -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">
   <path id="ocean" d="${sphereD}" fill="${oceanColor}"/>
 ${gratSVG ? gratSVG + '\n' : ''}${refLinesSVG ? refLinesSVG + '\n' : ''}  <g id="countries" fill-rule="evenodd">
 ${countryPaths.join('\n')}
   </g>${waterPart}
-  <path id="sphere-outline" d="${sphereD}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
+${migrationPart}  <path id="sphere-outline" d="${sphereD}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>
 </svg>`;
 }
 

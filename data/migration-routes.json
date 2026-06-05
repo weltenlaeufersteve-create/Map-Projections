@@ -1,0 +1,108 @@
+{
+  "origin": {
+    "coordinates": [37.0, 5.0],
+    "label": "Origin ~200 ka",
+    "description": "Omo Valley / Ethiopia"
+  },
+
+  "stops": [
+    { "ll": [37.0,   5.0],  "label": "Origin\n~200 ka", "size": 5.5, "main": true  },
+    { "ll": [32.0,  30.0],  "label": "Sinai",            "size": 3.0, "main": false },
+    { "ll": [36.0,  36.0],  "label": "Levant",           "size": 3.5, "main": false },
+    { "ll": [50.0,  15.0],  "label": "Arabia",           "size": 3.0, "main": false },
+    { "ll": [80.0,  15.0],  "label": "India",            "size": 3.0, "main": false },
+    { "ll": [135.0,-30.0],  "label": "Australia",        "size": 3.0, "main": false },
+    { "ll": [122.0, 32.0],  "label": "China",            "size": 3.0, "main": false },
+    { "ll": [-140.0,60.0],  "label": "Beringia",         "size": 3.0, "main": false },
+    { "ll": [-55.0,-25.0],  "label": "S. America",       "size": 3.0, "main": false },
+    { "ll": [2.0,   48.0],  "label": "Europe",           "size": 3.0, "main": false }
+  ],
+
+  "routes": {
+    "north": {
+      "color": "#f0c040",
+      "label": "Northern Route (via Nile / Sinai)",
+      "segments": [
+        {
+          "points": [[37,5],[36,15],[32,25],[32,30]],
+          "solid": true,
+          "label": null
+        },
+        {
+          "points": [[32,30],[35,32],[36,36]],
+          "solid": false,
+          "label": "Levant ~55 ka"
+        },
+        {
+          "points": [[36,36],[28,41],[15,45],[10,48],[2,48]],
+          "solid": true,
+          "label": "Europe"
+        },
+        {
+          "points": [[36,36],[44,38],[60,38],[75,35]],
+          "solid": true,
+          "label": "Central Asia"
+        },
+        {
+          "points": [[75,35],[95,35],[115,35],[122,32]],
+          "solid": true,
+          "label": "E. Asia ~40 ka"
+        },
+        {
+          "points": [[115,35],[120,45],[130,55],[145,60],[170,65],[-160,65],[-140,60]],
+          "solid": false,
+          "label": "Americas ~15 ka"
+        }
+      ]
+    },
+
+    "south": {
+      "color": "#e07040",
+      "label": "Southern Route (via Bab-el-Mandeb / Arabian Coast)",
+      "segments": [
+        {
+          "points": [[37,5],[42,10],[45,12],[50,15]],
+          "solid": true,
+          "label": "Bab-el-Mandeb ~70 ka"
+        },
+        {
+          "points": [[50,15],[58,22],[65,22],[72,20],[80,15]],
+          "solid": true,
+          "label": "India ~65 ka"
+        },
+        {
+          "points": [[80,15],[90,12],[100,5],[110,2],[120,-2],[130,-8],[140,-20],[135,-30]],
+          "solid": true,
+          "label": "Australia ~50 ka"
+        },
+        {
+          "points": [[80,15],[90,22],[100,20],[110,20],[120,25]],
+          "solid": false,
+          "label": null
+        }
+      ]
+    },
+
+    "dispersal": {
+      "color": "#a070d0",
+      "label": "Secondary Dispersal (internal + S. America)",
+      "segments": [
+        {
+          "points": [[37,5],[30,-5],[25,-15],[18,-25],[25,-33]],
+          "solid": true,
+          "label": "S. Africa"
+        },
+        {
+          "points": [[37,5],[20,5],[10,5],[0,5],[-15,10]],
+          "solid": true,
+          "label": "W. Africa"
+        },
+        {
+          "points": [[-140,60],[-120,50],[-105,40],[-90,20],[-70,-10],[-55,-25]],
+          "solid": false,
+          "label": "S. America ~13 ka"
+        }
+      ]
+    }
+  }
+}
