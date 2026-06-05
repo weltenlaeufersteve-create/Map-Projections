@@ -533,19 +533,23 @@
       <div style="font-size:11px;color:var(--text-dim);">Länder auswählen um Farben zuzuweisen</div>
     </div>
     <div style="margin-top:8px;" class="stroke-row">
-      <span>Stroke</span>
+      <span>Ländergrenzen</span>
       <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1">
       <span id="strokeVal" style="min-width:24px;text-align:right;">1</span>
       <input type="color" id="strokeColor" value="#ffffff" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
     </div>
-    <div style="margin-top:8px;" class="stroke-row">
+    <div style="margin-top:6px;" class="stroke-row world-only">
+      <span style="flex:1;">Nicht-selektierte Länder</span>
+      <input type="color" id="neutralColor" value="#3a3a3a" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
+    </div>
+    <div style="margin-top:6px;" class="stroke-row region-only">
       <span style="flex:1;">Inseln ausblenden</span>
     </div>
-    <div style="margin-top:4px;" class="stroke-row">
+    <div style="margin-top:4px;" class="stroke-row region-only">
       <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" style="flex:1;accent-color:var(--accent);">
       <span id="islandVal" style="min-width:60px;text-align:right;font-size:11px;">aus</span>
     </div>
-    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">
+    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;" class="region-only">
       Filtert Teile kleiner als X% des größten Polygons
     </div>
   </div>
@@ -631,16 +635,13 @@
     </div>
   </div>
 
-  <hr class="divider">
-
-  <button class="btn btn-primary" id="generateBtn" disabled>SVG generieren</button>
-
 </div>
 
 <!-- RIGHT: PREVIEW -->
 <div class="preview-area">
   <div class="preview-toolbar">
     <span id="previewLabel">—</span>
+    <span id="svgInfo" style="font-size:11px;color:var(--text-dim);"></span>
   </div>
   <div class="preview-canvas" id="previewCanvas">
     <div class="empty-state">
@@ -648,10 +649,11 @@
       <p>Auflösung wählen → Länder auswählen<br>dann SVG generieren</p>
     </div>
   </div>
-  <div class="download-bar" id="downloadBar" style="display:none;">
-    <span id="svgInfo"></span>
-    <button class="btn btn-secondary" id="copyPathBtn">Copy SVG</button>
-    <button class="btn btn-secondary" id="downloadBtn">↓ SVG downloaden</button>
+  <div class="download-bar" id="downloadBar">
+    <button class="btn btn-primary" id="generateBtn" disabled style="width:auto;padding:8px 18px;">SVG generieren</button>
+    <span style="flex:1;"></span>
+    <button class="btn btn-secondary" id="copyPathBtn" style="display:none;">Copy SVG</button>
+    <button class="btn btn-secondary" id="downloadBtn" style="display:none;">↓ SVG downloaden</button>
   </div>
 </div>
 

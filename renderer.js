@@ -478,7 +478,8 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
   const pathGen = d3geo.geoPath(projection);
 
   // ── Raster options from UI ──────────────────────────────────────────────────
-  const oceanColor    = document.getElementById('oceanColor')?.value  ?? '#1a2840';
+  const oceanColor    = document.getElementById('oceanColor')?.value   ?? '#1a2840';
+  const neutralColor  = document.getElementById('neutralColor')?.value ?? '#3a3a3a';
   const showGraticule = document.getElementById('showGraticule')?.checked ?? true;
   const gratColor     = document.getElementById('gratColor')?.value   ?? '#1e3a5a';
   const showEquator   = document.getElementById('showEquator')?.checked  ?? true;
@@ -519,7 +520,7 @@ function generateWorldSVG(allFeatures, selectedSet, colorMap, projType, strokeW,
   // ── Countries ───────────────────────────────────────────────────────────────
   const countryPaths = allFeatures.map(f => {
     const name  = getCountryName(f);
-    const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : '#3a3a3a';
+    const color = selectedSet.includes(name) ? (colorMap[name] || '#E8A838') : neutralColor;
     const d = pathGen(f);
     if (!d) return '';
     return `  <path id="${name.toLowerCase().replace(/[^a-z0-9]/g,'_')}" d="${d}" fill="${color}" stroke="${strokeCol}" stroke-width="${strokeW}" stroke-linejoin="round"/>`;
@@ -871,8 +872,10 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     ? (selectedCountries.length ? selectedCountries.join(' + ') + ' · World' : 'Welt')
     : selectedCountries.join(' + ');
   document.getElementById('previewLabel').textContent = label;
-  document.getElementById('downloadBar').style.display = 'flex';
-  document.getElementById('svgInfo').textContent = `${mode === 'world' ? worldFeatures.length + ' Länder (Welt)' : selectedCountries.length + ' Länder'} · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
+  document.getElementById('copyPathBtn').style.display = '';
+  document.getElementById('downloadBtn').style.display  = '';
+  document.getElementById('svgInfo').textContent =
+    `${mode === 'world' ? worldFeatures.length + ' Länder (Welt)' : selectedCountries.length + ' Länder'} · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
 });
 
 // ─── Download + Copy ──────────────────────────────────────────────────────────
