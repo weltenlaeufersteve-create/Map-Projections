@@ -367,10 +367,11 @@
   .preview-area { display: flex; flex-direction: column; overflow: hidden; }
 
   .preview-toolbar {
-    padding: 10px 22px; border-bottom: 1px solid var(--border);
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 10px;
   }
-  .preview-toolbar span { font-size: 11px; color: var(--text-dim); flex: 1; }
+  .preview-toolbar span { font-size: 11px; color: var(--text-dim); }
+  .preview-toolbar #previewLabel { flex-shrink: 0; }
 
   .preview-canvas {
     flex: 1; display: flex; align-items: center; justify-content: center;
@@ -421,10 +422,10 @@
 
   /* PROJECTION PILLS */
   .proj-pill {
-    display: block; padding: 6px 8px; border-radius: 4px;
-    font-size: 10px; text-align: center; font-weight: 500;
+    display: block; padding: 4px 7px; border-radius: 3px;
+    font-size: 9px; text-align: center; font-weight: 500;
     background: var(--surface2); border: 1px solid var(--border);
-    color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+    color: var(--text-dim); cursor: pointer; transition: all 0.15s; white-space: nowrap;
   }
   .proj-pill-input:checked + .proj-pill {
     background: var(--accent); color: #0f0e0c; border-color: var(--accent);
@@ -454,49 +455,14 @@
 <!-- LEFT PANEL -->
 <div class="panel">
 
-  <!-- STICKY HEADER: mode toggle (left) + projections (right) -->
+  <!-- STICKY HEADER: mode toggle only -->
   <div class="panel-header">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
-      <!-- LEFT: Mode -->
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
       <div style="flex-shrink:0;">
         <div class="section-label" style="margin-bottom:4px;">Mode</div>
         <div class="mode-toggle">
           <button class="mode-btn active" id="modeRegion">⊞ Region</button>
           <button class="mode-btn" id="modeWorld">⊕ World</button>
-        </div>
-      </div>
-      <!-- RIGHT: Projections -->
-      <div style="flex-shrink:0;">
-        <div class="section-label" style="margin-bottom:4px;">Projection</div>
-        <!-- Region Mode: 1 row of 3 pills -->
-        <div class="region-only" style="display:flex;gap:3px;">
-          <label style="cursor:pointer;" title="Azimuthal Equal Area">
-            <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">LAEA</span>
-          </label>
-          <label style="cursor:pointer;" title="Azimuthal Equidistant">
-            <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">AEQD</span>
-          </label>
-          <label style="cursor:pointer;" title="Mercator">
-            <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Merc</span>
-          </label>
-        </div>
-        <!-- World Mode: 1 row of 3 pills -->
-        <div class="world-only" style="display:flex;gap:3px;display:none;">
-          <label style="cursor:pointer;" title="Equirectangular">
-            <input type="radio" name="proj" value="equirectangular" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Equirect</span>
-          </label>
-          <label style="cursor:pointer;" title="Natural Earth">
-            <input type="radio" name="proj" value="naturalearth" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Nat Earth</span>
-          </label>
-          <label style="cursor:pointer;" title="Cahill-Keyes">
-            <input type="radio" name="proj" value="cahill-keyes" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Cahill-K</span>
-          </label>
         </div>
       </div>
     </div>
@@ -699,6 +665,40 @@
 <div class="preview-area">
   <div class="preview-toolbar">
     <span id="previewLabel">—</span>
+    <span style="flex:1;"></span>
+    <!-- Projection pills on right -->
+    <div style="display:flex;gap:3px;align-items:center;">
+      <!-- Region Mode -->
+      <div class="region-only" style="display:flex;gap:3px;">
+        <label style="cursor:pointer;margin:0;" title="Azimuthal Equal Area">
+          <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">LAEA</span>
+        </label>
+        <label style="cursor:pointer;margin:0;" title="Azimuthal Equidistant">
+          <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">AEQD</span>
+        </label>
+        <label style="cursor:pointer;margin:0;" title="Mercator">
+          <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">Merc</span>
+        </label>
+      </div>
+      <!-- World Mode -->
+      <div class="world-only" style="display:flex;gap:3px;display:none;">
+        <label style="cursor:pointer;margin:0;" title="Equirectangular">
+          <input type="radio" name="proj" value="equirectangular" style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">Equirect</span>
+        </label>
+        <label style="cursor:pointer;margin:0;" title="Natural Earth">
+          <input type="radio" name="proj" value="naturalearth" style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">NatEarth</span>
+        </label>
+        <label style="cursor:pointer;margin:0;" title="Cahill-Keyes">
+          <input type="radio" name="proj" value="cahill-keyes" style="display:none;" class="proj-pill-input">
+          <span class="proj-pill">Cahill</span>
+        </label>
+      </div>
+    </div>
   </div>
   <div class="preview-canvas" id="previewCanvas">
     <div class="empty-state">
