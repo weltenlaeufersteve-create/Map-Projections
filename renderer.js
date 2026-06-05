@@ -626,6 +626,15 @@ document.getElementById('winMax').addEventListener('click', () => ipcRenderer.se
 document.getElementById('winClose').addEventListener('click', () => ipcRenderer.send('win:close'));
 
 // ─── Mode toggle ──────────────────────────────────────────────────────────────
+function syncProjectionPills() {
+  const checked = document.querySelector('input[name="proj"]:checked');
+  if (checked) {
+    document.querySelectorAll('.proj-pill-input').forEach(inp => inp.checked = false);
+    const pill = document.querySelector(`.proj-pill-input[value="${checked.value}"]`);
+    if (pill) pill.checked = true;
+  }
+}
+
 function applyMode(m) {
   mode = m;
   localStorage.setItem('app_mode', mode);
@@ -643,10 +652,20 @@ function applyMode(m) {
   if (mode === 'region' && ['cahill-keyes', 'naturalearth', 'equirectangular'].includes(proj.value)) {
     document.querySelector('input[name="proj"][value="laea"]').checked = true;
   }
+
+  syncProjectionPills();
 }
 
 document.getElementById('modeRegion').addEventListener('click', () => applyMode('region'));
 document.getElementById('modeWorld').addEventListener('click',  () => applyMode('world'));
+
+// ─── Projection pills ─────────────────────────────────────────────────────────
+document.querySelectorAll('.proj-pill-input').forEach(radio => {
+  radio.addEventListener('change', () => {
+    syncProjectionPills();
+    if (worldFeatures.length && selectedCountries.length) generate();
+  });
+});
 
 // ─── Manual expand toggles ────────────────────────────────────────────────────
 function setupToggle(btnId, bodyId) {
@@ -950,6 +969,7 @@ document.getElementById('copyPathBtn').addEventListener('click', () => {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 applyMode(mode);
+syncProjectionPills();
 updateResolutionUI();
 autoLoad();
 renderComboList();
