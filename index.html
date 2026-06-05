@@ -666,38 +666,34 @@
   <div class="preview-toolbar">
     <span id="previewLabel">—</span>
     <span style="flex:1;"></span>
-    <!-- Projection pills on right -->
-    <div style="display:flex;gap:3px;align-items:center;">
-      <!-- Region Mode -->
-      <div class="region-only" style="display:flex;gap:3px;">
-        <label style="cursor:pointer;margin:0;" title="Azimuthal Equal Area">
-          <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">LAEA</span>
-        </label>
-        <label style="cursor:pointer;margin:0;" title="Azimuthal Equidistant">
-          <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">AEQD</span>
-        </label>
-        <label style="cursor:pointer;margin:0;" title="Mercator">
-          <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">Merc</span>
-        </label>
-      </div>
-      <!-- World Mode -->
-      <div class="world-only" style="display:flex;gap:3px;display:none;">
-        <label style="cursor:pointer;margin:0;" title="Equirectangular">
-          <input type="radio" name="proj" value="equirectangular" style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">Equirect</span>
-        </label>
-        <label style="cursor:pointer;margin:0;" title="Natural Earth">
-          <input type="radio" name="proj" value="naturalearth" style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">NatEarth</span>
-        </label>
-        <label style="cursor:pointer;margin:0;" title="Cahill-Keyes">
-          <input type="radio" name="proj" value="cahill-keyes" style="display:none;" class="proj-pill-input">
-          <span class="proj-pill">Cahill</span>
-        </label>
-      </div>
+    <!-- Projection pills (horizontal row) -->
+    <div style="display:flex;gap:4px;align-items:center;">
+      <!-- Region Mode projections -->
+      <label class="region-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">LAEA</span>
+      </label>
+      <label class="region-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">AEQD</span>
+      </label>
+      <label class="region-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">Merc</span>
+      </label>
+      <!-- World Mode projections -->
+      <label class="world-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="equirectangular" style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">Equirect</span>
+      </label>
+      <label class="world-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="naturalearth" style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">NatEarth</span>
+      </label>
+      <label class="world-only" style="cursor:pointer;margin:0;">
+        <input type="radio" name="proj" value="cahill-keyes" style="display:none;" class="proj-pill-input">
+        <span class="proj-pill">Cahill</span>
+      </label>
     </div>
   </div>
   <div class="preview-canvas" id="previewCanvas">
