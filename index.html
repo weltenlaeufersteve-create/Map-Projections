@@ -404,7 +404,7 @@
 
   /* MODE TOGGLE */
   .mode-toggle {
-    display: flex;
+    display: flex; width: 100%;
     border: 1px solid var(--border);
     border-radius: 6px;
     overflow: hidden;
@@ -455,20 +455,12 @@
 <!-- LEFT PANEL -->
 <div class="panel">
 
-  <!-- STICKY HEADER: mode toggle only -->
+  <!-- STICKY HEADER: mode toggle -->
   <div class="panel-header">
-    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
-      <div style="flex-shrink:0;">
-        <div class="section-label" style="margin-bottom:4px;">Mode</div>
-        <div class="mode-toggle">
-          <button class="mode-btn active" id="modeRegion">⊞ Region</button>
-          <button class="mode-btn" id="modeWorld">⊕ World</button>
-        </div>
-      </div>
-    </div>
-    <!-- INFO LINE -->
-    <div style="font-size:10px;color:var(--text-dim);">
-      <span id="countryInfoLabel">—</span>
+    <div class="section-label" style="margin-bottom:6px;">Mode</div>
+    <div class="mode-toggle" style="width:100%;">
+      <button class="mode-btn active" id="modeRegion">⊞ Region</button>
+      <button class="mode-btn" id="modeWorld">⊕ World</button>
     </div>
   </div>
 
