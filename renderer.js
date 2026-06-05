@@ -69,7 +69,7 @@ function updateResolutionUI() {
     const optEl   = document.getElementById(`resOpt${res}`);
     const availEl = document.getElementById(`resAvail${res}`);
     if (avail) {
-      availEl.textContent = '✓ vorhanden';
+      availEl.textContent = '✓ available';
       optEl.classList.remove('unavail');
     } else {
       availEl.textContent = '—';
@@ -86,7 +86,7 @@ function updateResolutionUI() {
 async function autoLoad() {
   const paths = getNEPaths(resolution);
   if (!fileExists(paths.countries)) {
-    setStatus(`ne_${resolution}_admin_0_countries.zip nicht gefunden`, 'err');
+    setStatus(`ne_${resolution}_admin_0_countries.zip not found`, 'err');
     return;
   }
   await loadCountriesFromPath(paths.countries);
@@ -126,26 +126,26 @@ function processGeoJSON(geojson) {
 
 // ─── Loaders: file-path based (Node fs) ──────────────────────────────────────
 async function loadCountriesFromPath(filePath) {
-  setStatus('Lade…', 'loading');
+  setStatus('Loading…', 'loading');
   try {
     const buf = fs.readFileSync(filePath);
     const geojson = await shp(nodeBufferToArrayBuffer(buf));
     worldFeatures = processGeoJSON(geojson);
-    if (!worldFeatures.length) throw new Error('Keine Features gefunden');
+    if (!worldFeatures.length) throw new Error('No features found');
     NAME_FIELD = detectNameField(worldFeatures[0].properties || {});
     countryNames = worldFeatures.map(getCountryName).filter(Boolean).sort();
-    setStatus(`${countryNames.length} Länder (${resolution})`, 'ok');
+    setStatus(`${countryNames.length} countries (${resolution})`, 'ok');
     document.getElementById('generateBtn').disabled = false;
     renderComboList();
   } catch(e) {
-    setStatus('Fehler: ' + e.message, 'err');
+    setStatus('Error: ' + e.message, 'err');
     console.error(e);
   }
 }
 
 async function loadPhysicalFromPaths(filePaths) {
   const statusEl = document.getElementById('fileStatusPhysical');
-  statusEl.innerHTML = pill('Lade…', 'loading');
+  statusEl.innerHTML = pill('Loading…', 'loading');
   const loaded = [];
   try {
     for (const fp of filePaths) {
@@ -153,22 +153,22 @@ async function loadPhysicalFromPaths(filePaths) {
       const geojson  = await shp(nodeBufferToArrayBuffer(buf));
       const features = processGeoJSON(geojson);
       const name     = path.basename(fp).toLowerCase();
-      if (name.includes('river')) { riversFeatures = features; loaded.push(`${features.length} Flüsse`); }
-      else if (name.includes('lake')) { lakesFeatures = features; loaded.push(`${features.length} Seen`); }
+      if (name.includes('river')) { riversFeatures = features; loaded.push(`${features.length} rivers`); }
+      else if (name.includes('lake')) { lakesFeatures = features; loaded.push(`${features.length} lakes`); }
     }
     if (loaded.length) {
-      statusEl.innerHTML = pill(loaded.join(', ') + ' geladen', 'ok');
+      statusEl.innerHTML = pill(loaded.join(', ') + ' loaded', 'ok');
       showLayerToggles();
     }
   } catch(e) {
-    statusEl.innerHTML = pill('Fehler: ' + e.message, 'err');
+    statusEl.innerHTML = pill('Error: ' + e.message, 'err');
     console.error(e);
   }
 }
 
 // ─── Loaders: File object based (drag-and-drop) ───────────────────────────────
 async function loadFromFileObjects(files) {
-  setStatus('Lade…', 'loading');
+  setStatus('Loading…', 'loading');
   try {
     const arr = Array.from(files);
     let geojson;
@@ -181,36 +181,36 @@ async function loadFromFileObjects(files) {
       geojson = await shp.combine([shp.parseShp(await shpF.arrayBuffer()), shp.parseDbf(await dbfF.arrayBuffer())]);
     }
     worldFeatures = processGeoJSON(geojson);
-    if (!worldFeatures.length) throw new Error('Keine Features');
+    if (!worldFeatures.length) throw new Error('No features found');
     NAME_FIELD = detectNameField(worldFeatures[0].properties || {});
     countryNames = worldFeatures.map(getCountryName).filter(Boolean).sort();
-    setStatus(`${countryNames.length} Länder geladen`, 'ok');
+    setStatus(`${countryNames.length} countries loaded`, 'ok');
     document.getElementById('generateBtn').disabled = false;
     renderComboList();
   } catch(e) {
-    setStatus('Fehler: ' + e.message, 'err');
+    setStatus('Error: ' + e.message, 'err');
     console.error(e);
   }
 }
 
 async function loadPhysicalFromFileObjects(files) {
   const statusEl = document.getElementById('fileStatusPhysical');
-  statusEl.innerHTML = pill('Lade…', 'loading');
+  statusEl.innerHTML = pill('Loading…', 'loading');
   const loaded = [];
   try {
     for (const file of Array.from(files)) {
       const geojson  = await shp(await file.arrayBuffer());
       const features = processGeoJSON(geojson);
       const name     = file.name.toLowerCase();
-      if (name.includes('river')) { riversFeatures = features; loaded.push(`${features.length} Flüsse`); }
-      else if (name.includes('lake')) { lakesFeatures = features; loaded.push(`${features.length} Seen`); }
+      if (name.includes('river')) { riversFeatures = features; loaded.push(`${features.length} rivers`); }
+      else if (name.includes('lake')) { lakesFeatures = features; loaded.push(`${features.length} lakes`); }
     }
     if (loaded.length) {
-      statusEl.innerHTML = pill(loaded.join(', ') + ' geladen', 'ok');
+      statusEl.innerHTML = pill(loaded.join(', ') + ' loaded', 'ok');
       showLayerToggles();
     }
   } catch(e) {
-    statusEl.innerHTML = pill('Fehler: ' + e.message, 'err');
+    statusEl.innerHTML = pill('Error: ' + e.message, 'err');
     console.error(e);
   }
 }
@@ -602,7 +602,7 @@ function setupToggle(btnId, bodyId) {
   const body = document.getElementById(bodyId);
   btn.addEventListener('click', () => {
     const open = body.classList.toggle('open');
-    btn.textContent = (open ? '▾ ' : '▸ ') + 'Manuell laden…';
+    btn.textContent = (open ? '▾ ' : '▸ ') + 'Load manually…';
   });
 }
 setupToggle('manualToggle1', 'manualBody1');
@@ -735,7 +735,7 @@ document.getElementById('clearSelBtn').addEventListener('click', () => {
 function renderComboList() {
   const list = document.getElementById('comboList');
   if (!combos.length) {
-    list.innerHTML = '<div style="font-size:11px;color:var(--text-dim);">Noch keine Kombis</div>'; return;
+    list.innerHTML = '<div style="font-size:11px;color:var(--text-dim);">No combos saved yet</div>'; return;
   }
   list.innerHTML = combos.map(c => `
     <div class="combo-item ${activeComboId===c.id?'active':''}" onclick="loadCombo(${c.id})">
@@ -770,7 +770,7 @@ document.getElementById('addComboBtn').addEventListener('click', () => {
 function renderColorAssign() {
   const container = document.getElementById('colorAssign');
   if (!selectedCountries.length) {
-    container.innerHTML = '<div style="font-size:11px;color:var(--text-dim);">Länder auswählen um Farben zuzuweisen</div>'; return;
+    container.innerHTML = '<div style="font-size:11px;color:var(--text-dim);">Select countries to assign colours</div>'; return;
   }
   container.innerHTML = selectedCountries.map(name => {
     const color = countryColors[name] || '#888';
@@ -821,7 +821,7 @@ document.getElementById('riverWidth').addEventListener('input', e => {
 });
 document.getElementById('islandThreshold').addEventListener('input', e => {
   const v = parseInt(e.target.value);
-  document.getElementById('islandVal').textContent = v === 0 ? 'aus' : v + '%';
+  document.getElementById('islandVal').textContent = v === 0 ? 'off' : v + '%';
 });
 
 // ─── Generate ─────────────────────────────────────────────────────────────────
@@ -846,7 +846,7 @@ document.getElementById('generateBtn').addEventListener('click', () => {
     currentSVG = generateWorldSVG(worldFeatures, selectedCountries, countryColors, projType, strokeW, strokeCol, waterOpts);
   } else {
     const features = worldFeatures.filter(f => selectedCountries.includes(getCountryName(f)));
-    if (!features.length) { setStatus('Keine passenden Länder', 'err'); return; }
+    if (!features.length) { setStatus('No matching countries found', 'err'); return; }
 
     const threshold = parseInt(document.getElementById('islandThreshold').value);
     const filtered  = filterIslands(features, threshold);
@@ -874,8 +874,10 @@ document.getElementById('generateBtn').addEventListener('click', () => {
   document.getElementById('previewLabel').textContent = label;
   document.getElementById('copyPathBtn').style.display = '';
   document.getElementById('downloadBtn').style.display  = '';
-  document.getElementById('svgInfo').textContent =
-    `${mode === 'world' ? worldFeatures.length + ' Länder (Welt)' : selectedCountries.length + ' Länder'} · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
+  const countLabel = mode === 'world'
+    ? `${worldFeatures.length} countries (World)`
+    : `${selectedCountries.length} ${selectedCountries.length === 1 ? 'country' : 'countries'}`;
+  document.getElementById('svgInfo').textContent = `${countLabel} · ${(currentSVG.length/1024).toFixed(1)} KB · ${resolution}`;
 });
 
 // ─── Download + Copy ──────────────────────────────────────────────────────────

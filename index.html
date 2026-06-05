@@ -444,7 +444,7 @@
 
   <!-- STICKY HEADER: mode toggle -->
   <div class="panel-header">
-    <div class="section-label">Modus</div>
+    <div class="section-label">Mode</div>
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeRegion">⊞ Region</button>
       <button class="mode-btn" id="modeWorld">⊕ World</button>
@@ -461,22 +461,22 @@
       <label class="res-opt" id="resOpt10m">
         <input type="radio" name="res" value="10m" id="res10m">
         <span class="res-label">10m</span>
-        <span class="res-avail" id="resAvail10m">prüfe…</span>
+        <span class="res-avail" id="resAvail10m">checking…</span>
       </label>
       <label class="res-opt" id="resOpt50m">
         <input type="radio" name="res" value="50m" id="res50m">
         <span class="res-label">50m</span>
-        <span class="res-avail" id="resAvail50m">prüfe…</span>
+        <span class="res-avail" id="resAvail50m">checking…</span>
       </label>
     </div>
     <div style="margin-top:8px;" id="fileStatus"></div>
 
     <!-- Manual fallback -->
     <div class="manual-section">
-      <button class="manual-toggle" id="manualToggle1">▸ Manuell laden…</button>
+      <button class="manual-toggle" id="manualToggle1">▸ Load manually…</button>
       <div class="manual-body" id="manualBody1">
-        <button class="btn btn-secondary" id="pickCountriesBtn">↑ ZIP / SHP wählen…</button>
-        <div class="drop-zone" id="dropZone">ZIP hierher ziehen</div>
+        <button class="btn btn-secondary" id="pickCountriesBtn">↑ Choose ZIP / SHP…</button>
+        <div class="drop-zone" id="dropZone">Drag ZIP here</div>
       </div>
     </div>
   </div>
@@ -485,30 +485,30 @@
 
   <!-- 01b PHYSICAL -->
   <div>
-    <div class="section-label">01b — Seen &amp; Flüsse <span id="physAutoLabel" style="color:var(--green);font-size:10px;"></span></div>
+    <div class="section-label">01b — Lakes &amp; Rivers <span id="physAutoLabel" style="color:var(--green);font-size:10px;"></span></div>
     <div id="fileStatusPhysical"></div>
 
     <div class="manual-section" style="margin-top:6px;">
-      <button class="manual-toggle" id="manualToggle2">▸ Manuell laden…</button>
+      <button class="manual-toggle" id="manualToggle2">▸ Load manually…</button>
       <div class="manual-body" id="manualBody2">
-        <button class="btn btn-secondary" id="pickPhysicalBtn">↑ Lakes + Rivers ZIPs…</button>
-        <div class="drop-zone" id="dropZonePhys">ZIPs hierher ziehen</div>
+        <button class="btn btn-secondary" id="pickPhysicalBtn">↑ Choose Lakes + Rivers ZIPs…</button>
+        <div class="drop-zone" id="dropZonePhys">Drag ZIPs here</div>
       </div>
     </div>
 
     <div style="margin-top:8px;display:none;flex-direction:column;gap:6px;" id="layerToggles">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showLakes" checked style="accent-color:#5b8db8;">
-        <span>Seen</span>
+        <span>Lakes</span>
         <input type="color" id="lakeColor" value="#5b8db8" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showRivers" checked style="accent-color:#7ab3d4;">
-        <span>Flüsse</span>
+        <span>Rivers</span>
         <input type="color" id="riverColor" value="#7ab3d4" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
       </label>
       <div class="stroke-row" style="margin-top:2px;">
-        <span>Breite</span>
+        <span>Width</span>
         <input type="range" id="riverWidth" min="0.2" max="3" step="0.1" value="0.8">
         <span id="riverWidthVal" style="min-width:24px;text-align:right;">0.8</span>
       </div>
@@ -519,21 +519,21 @@
 
   <!-- 02 COUNTRIES -->
   <div>
-    <div class="section-label">02 — Länder-Kombination</div>
+    <div class="section-label">02 — Country Selection</div>
     <div class="add-combo">
       <div class="selected-countries" id="selectedCountries"></div>
       <div class="country-input-wrap">
-        <input type="text" id="countryInput" placeholder="Land eingeben…" autocomplete="off">
+        <input type="text" id="countryInput" placeholder="Add country…" autocomplete="off">
         <div class="autocomplete-list" id="autocompleteList"></div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn btn-add" id="addComboBtn">+ Kombi speichern</button>
+        <button class="btn btn-add" id="addComboBtn">+ Save Combo</button>
         <button class="btn btn-secondary" id="clearSelBtn">✕</button>
       </div>
     </div>
 
     <div style="margin-top:12px;">
-      <div class="section-label">Gespeicherte Kombis</div>
+      <div class="section-label">Saved Combos</div>
       <div class="combo-list" id="comboList"></div>
     </div>
   </div>
@@ -542,29 +542,29 @@
 
   <!-- 03 COLORS -->
   <div>
-    <div class="section-label">03 — Farben</div>
+    <div class="section-label">03 — Colours</div>
     <div class="color-assign" id="colorAssign">
-      <div style="font-size:11px;color:var(--text-dim);">Länder auswählen um Farben zuzuweisen</div>
+      <div style="font-size:11px;color:var(--text-dim);">Select countries to assign colours</div>
     </div>
     <div style="margin-top:8px;" class="stroke-row">
-      <span>Ländergrenzen</span>
+      <span>Country Borders</span>
       <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1">
       <span id="strokeVal" style="min-width:24px;text-align:right;">1</span>
       <input type="color" id="strokeColor" value="#ffffff" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
     </div>
     <div style="margin-top:6px;" class="stroke-row world-only">
-      <span style="flex:1;">Nicht-selektierte Länder</span>
+      <span style="flex:1;">Unselected Countries</span>
       <input type="color" id="neutralColor" value="#3a3a3a" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
     </div>
     <div style="margin-top:6px;" class="stroke-row region-only">
-      <span style="flex:1;">Inseln ausblenden</span>
+      <span style="flex:1;">Hide Islands</span>
     </div>
     <div style="margin-top:4px;" class="stroke-row region-only">
       <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" style="flex:1;accent-color:var(--accent);">
-      <span id="islandVal" style="min-width:60px;text-align:right;font-size:11px;">aus</span>
+      <span id="islandVal" style="min-width:60px;text-align:right;font-size:11px;">off</span>
     </div>
     <div style="font-size:10px;color:var(--text-dim);margin-top:2px;" class="region-only">
-      Filtert Teile kleiner als X% des größten Polygons
+      Filters parts smaller than X% of the largest polygon
     </div>
   </div>
 
@@ -572,28 +572,28 @@
 
   <!-- 04 RASTER (World Mode) -->
   <div class="world-only">
-    <div class="section-label">04 — Raster &amp; Hintergrund</div>
+    <div class="section-label">04 — Grid &amp; Background</div>
     <div style="display:flex;flex-direction:column;gap:6px;">
       <div class="stroke-row">
-        <span style="flex:1;">Ozean</span>
+        <span style="flex:1;">Ocean</span>
         <input type="color" id="oceanColor" value="#1a2840" style="width:24px;height:24px;border:none;background:none;cursor:pointer;border-radius:3px;">
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showGraticule" checked style="accent-color:var(--accent);">
-        <span>Gitternetz 15°</span>
+        <span>Graticule 15°</span>
         <input type="color" id="gratColor" value="#1e3a5a" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showEquator" checked style="accent-color:#3d9fff;">
-        <span>Äquator</span>
+        <span>Equator</span>
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showTropics" checked style="accent-color:#ffc840;">
-        <span>Wendekreise ±23.5°</span>
+        <span>Tropics ±23.5°</span>
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showPolar" checked style="accent-color:#96c8ff;">
-        <span>Polarkreise ±66.5°</span>
+        <span>Polar Circles ±66.5°</span>
       </label>
     </div>
   </div>
@@ -602,48 +602,48 @@
 
   <!-- 05 PROJECTION -->
   <div>
-    <div class="section-label">05 — Projektion</div>
+    <div class="section-label">05 — Projection</div>
     <div class="radio-group">
       <label class="radio-opt region-only">
         <input type="radio" name="proj" value="laea" checked>
         <div>
           <div>Azimuthal Equal Area</div>
-          <small>Flächentreu · zentriert auf Region</small>
+          <small>Equal area · centred on region</small>
         </div>
       </label>
       <label class="radio-opt region-only">
         <input type="radio" name="proj" value="aeqd">
         <div>
           <div>Azimuthal Equidistant</div>
-          <small>Abstands-korrekt · zentriert</small>
+          <small>Equidistant · centred</small>
         </div>
       </label>
       <label class="radio-opt region-only">
         <input type="radio" name="proj" value="merc">
         <div>
           <div>Mercator</div>
-          <small>Winkeltreu · vertraut</small>
+          <small>Conformal · familiar</small>
         </div>
       </label>
       <label class="radio-opt world-only">
         <input type="radio" name="proj" value="equirectangular">
         <div>
           <div>Equirectangular</div>
-          <small>Lon/Lat-Gitter · einfach</small>
+          <small>Lon/Lat grid · simple</small>
         </div>
       </label>
       <label class="radio-opt world-only">
         <input type="radio" name="proj" value="naturalearth">
         <div>
           <div>Natural Earth</div>
-          <small>Kompromiss-Projektion · Weltkarte</small>
+          <small>Compromise · world map</small>
         </div>
       </label>
       <label class="radio-opt world-only">
         <input type="radio" name="proj" value="cahill-keyes">
         <div>
           <div>Cahill-Keyes</div>
-          <small>Butterfly · Oktaeder · einzigartig</small>
+          <small>Butterfly · octahedral · unique</small>
         </div>
       </label>
     </div>
@@ -656,19 +656,18 @@
 <div class="preview-area">
   <div class="preview-toolbar">
     <span id="previewLabel">—</span>
-    <span id="svgInfo" style="font-size:11px;color:var(--text-dim);"></span>
   </div>
   <div class="preview-canvas" id="previewCanvas">
     <div class="empty-state">
       <span class="big">🌍</span>
-      <p>Auflösung wählen → Länder auswählen<br>dann SVG generieren</p>
+      <p>Select resolution → add countries, then generate</p>
     </div>
   </div>
   <div class="download-bar" id="downloadBar">
-    <button class="btn btn-primary" id="generateBtn" disabled style="width:auto;padding:8px 18px;">SVG generieren</button>
-    <span style="flex:1;"></span>
+    <button class="btn btn-primary" id="generateBtn" disabled style="width:auto;padding:8px 18px;">Generate SVG</button>
+    <span id="svgInfo" style="flex:1;text-align:center;font-size:11px;color:var(--text-dim);"></span>
     <button class="btn btn-secondary" id="copyPathBtn" style="display:none;">Copy SVG</button>
-    <button class="btn btn-secondary" id="downloadBtn" style="display:none;">↓ SVG downloaden</button>
+    <button class="btn btn-secondary" id="downloadBtn" style="display:none;">↓ Download SVG</button>
   </div>
 </div>
 
