@@ -454,9 +454,10 @@
 <!-- LEFT PANEL -->
 <div class="panel">
 
-  <!-- STICKY HEADER: mode toggle + projections -->
+  <!-- STICKY HEADER: mode toggle (left) + projections (right) -->
   <div class="panel-header">
-    <div style="display:flex;gap:10px;margin-bottom:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">
+      <!-- LEFT: Mode -->
       <div style="flex-shrink:0;">
         <div class="section-label" style="margin-bottom:4px;">Mode</div>
         <div class="mode-toggle">
@@ -464,42 +465,44 @@
           <button class="mode-btn" id="modeWorld">⊕ World</button>
         </div>
       </div>
-      <div style="flex:1;">
+      <!-- RIGHT: Projections -->
+      <div style="flex-shrink:0;">
         <div class="section-label" style="margin-bottom:4px;">Projection</div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <!-- Region Mode: 3 rows of 1, side-by-side would be cramped, so 1 row of 3 pills -->
-          <div class="region-only" style="display:flex;gap:3px;">
-            <label style="flex:1;cursor:pointer;" title="Azimuthal Equal Area">
-              <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
-              <span class="proj-pill">LAEA</span>
-            </label>
-            <label style="flex:1;cursor:pointer;" title="Azimuthal Equidistant">
-              <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
-              <span class="proj-pill">AEQD</span>
-            </label>
-            <label style="flex:1;cursor:pointer;" title="Mercator">
-              <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
-              <span class="proj-pill">Merc</span>
-            </label>
-          </div>
-          <!-- World Mode: 3 rows of 1 -->
-          <label class="world-only" style="cursor:pointer;display:none;" title="Equirectangular">
+        <!-- Region Mode: 1 row of 3 pills -->
+        <div class="region-only" style="display:flex;gap:3px;">
+          <label style="cursor:pointer;" title="Azimuthal Equal Area">
+            <input type="radio" name="proj" value="laea" checked style="display:none;" class="proj-pill-input">
+            <span class="proj-pill">LAEA</span>
+          </label>
+          <label style="cursor:pointer;" title="Azimuthal Equidistant">
+            <input type="radio" name="proj" value="aeqd" style="display:none;" class="proj-pill-input">
+            <span class="proj-pill">AEQD</span>
+          </label>
+          <label style="cursor:pointer;" title="Mercator">
+            <input type="radio" name="proj" value="merc" style="display:none;" class="proj-pill-input">
+            <span class="proj-pill">Merc</span>
+          </label>
+        </div>
+        <!-- World Mode: 1 row of 3 pills -->
+        <div class="world-only" style="display:flex;gap:3px;display:none;">
+          <label style="cursor:pointer;" title="Equirectangular">
             <input type="radio" name="proj" value="equirectangular" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Equirectangular</span>
+            <span class="proj-pill">Equirect</span>
           </label>
-          <label class="world-only" style="cursor:pointer;display:none;" title="Natural Earth">
+          <label style="cursor:pointer;" title="Natural Earth">
             <input type="radio" name="proj" value="naturalearth" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Natural Earth</span>
+            <span class="proj-pill">Nat Earth</span>
           </label>
-          <label class="world-only" style="cursor:pointer;display:none;" title="Cahill-Keyes">
+          <label style="cursor:pointer;" title="Cahill-Keyes">
             <input type="radio" name="proj" value="cahill-keyes" style="display:none;" class="proj-pill-input">
-            <span class="proj-pill">Cahill-Keyes</span>
+            <span class="proj-pill">Cahill-K</span>
           </label>
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:4px;font-size:10px;color:var(--text-dim);">
-      <span id="countryInfoLabel" style="flex:1;">—</span>
+    <!-- INFO LINE -->
+    <div style="font-size:10px;color:var(--text-dim);">
+      <span id="countryInfoLabel">—</span>
     </div>
   </div>
 
