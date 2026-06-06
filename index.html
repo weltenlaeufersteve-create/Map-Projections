@@ -333,12 +333,32 @@
   .radio-opt input { accent-color: var(--accent); }
   .radio-opt small { color: var(--text-dim); font-size: 10px; display: block; margin-top: 1px; }
 
-  /* STROKE */
+  /* FORM ELEMENTS */
+  .color-input {
+    width: 24px; height: 24px; border-radius: 4px;
+    border: 1px solid var(--border); background: none;
+    cursor: pointer; transition: border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .color-input:hover { border-color: var(--accent); }
+
+  .slider-input {
+    flex: 1; accent-color: var(--accent);
+    height: 5px; border-radius: 2px;
+  }
+
+  .slider-value {
+    min-width: 32px; text-align: right; font-size: 11px;
+    color: var(--text-dim); flex-shrink: 0;
+  }
+
+  /* STROKE ROW */
   .stroke-row {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 8px;
     font-size: 12px; color: var(--text-dim);
   }
-  .stroke-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .stroke-row > span:first-child { flex-shrink: 0; }
+  .stroke-row input[type=range] { flex: 1; accent-color: var(--accent); height: 5px; border-radius: 2px; }
 
   /* BUTTONS */
   .btn {
@@ -511,17 +531,19 @@
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
           <input type="checkbox" id="showLakes" checked style="accent-color:#5b8db8;">
           <span>Lakes</span>
-          <input type="color" id="lakeColor" value="#5b8db8" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
+          <span style="flex:1;"></span>
+          <input type="color" id="lakeColor" value="#5b8db8" class="color-input">
         </label>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
           <input type="checkbox" id="showRivers" checked style="accent-color:#7ab3d4;">
           <span>Rivers</span>
-          <input type="color" id="riverColor" value="#7ab3d4" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
+          <span style="flex:1;"></span>
+          <input type="color" id="riverColor" value="#7ab3d4" class="color-input">
         </label>
-        <div class="stroke-row" style="margin-top:2px;">
+        <div class="stroke-row" style="margin-top:4px;">
           <span>Width</span>
-          <input type="range" id="riverWidth" min="0.2" max="3" step="0.1" value="0.8">
-          <span id="riverWidthVal" style="min-width:24px;text-align:right;">0.8</span>
+          <input type="range" id="riverWidth" min="0.2" max="3" step="0.1" value="0.8" class="slider-input">
+          <span id="riverWidthVal" class="slider-value">0.8</span>
         </div>
       </div>
     </div>
@@ -560,20 +582,23 @@
     </div>
     <div style="margin-top:8px;" class="stroke-row">
       <span>Country Borders</span>
-      <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1">
-      <span id="strokeVal" style="min-width:24px;text-align:right;">1</span>
-      <input type="color" id="strokeColor" value="#ffffff" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
+      <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1" class="slider-input">
+      <span id="strokeVal" class="slider-value">1</span>
+      <input type="color" id="strokeColor" value="#ffffff" class="color-input">
     </div>
     <div style="margin-top:6px;" class="stroke-row world-only">
-      <span style="flex:1;">Unselected Countries</span>
-      <input type="color" id="neutralColor" value="#3a3a3a" style="width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:3px;">
+      <span>Unselected Countries</span>
+      <span style="flex:1;"></span>
+      <input type="color" id="neutralColor" value="#3a3a3a" class="color-input">
     </div>
     <div style="margin-top:6px;" class="stroke-row region-only">
-      <span style="flex:1;">Hide Islands</span>
+      <span>Hide Islands</span>
+      <span style="flex:1;"></span>
     </div>
     <div style="margin-top:4px;" class="stroke-row region-only">
-      <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" style="flex:1;accent-color:var(--accent);">
-      <span id="islandVal" style="min-width:60px;text-align:right;font-size:11px;">off</span>
+      <span></span>
+      <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" class="slider-input">
+      <span id="islandVal" class="slider-value">off</span>
     </div>
     <div style="font-size:10px;color:var(--text-dim);margin-top:2px;" class="region-only">
       Filters parts smaller than X% of the largest polygon
@@ -587,13 +612,15 @@
     <div class="section-label">04 — Grid &amp; Background</div>
     <div style="display:flex;flex-direction:column;gap:6px;">
       <div class="stroke-row">
-        <span style="flex:1;">Ocean</span>
-        <input type="color" id="oceanColor" value="#1a2840" style="width:24px;height:24px;border:none;background:none;cursor:pointer;border-radius:3px;">
+        <span>Ocean</span>
+        <span style="flex:1;"></span>
+        <input type="color" id="oceanColor" value="#1a2840" class="color-input">
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showGraticule" checked style="accent-color:var(--accent);">
         <span>Graticule 15°</span>
-        <input type="color" id="gratColor" value="#1e3a5a" style="width:22px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;margin-left:auto;">
+        <span style="flex:1;"></span>
+        <input type="color" id="gratColor" value="#1e3a5a" class="color-input">
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
         <input type="checkbox" id="showEquator" checked style="accent-color:#3d9fff;">
