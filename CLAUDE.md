@@ -1,143 +1,171 @@
 # Country SVG Tool — CLAUDE.md
 
-## Was das ist
-Electron-Desktop-App zum Generieren sauberer SVG-Länderkarten aus Natural Earth Shapefiles.
-Gedacht für Design- und Kartografie-Arbeit: Länder auswählen, einfärben, als SVG exportieren —
-mit korrekter kartografischer Projektion statt simplem Plate Carrée.
+## What is it
+Electron desktop app for generating clean SVG country maps from Natural Earth shapefiles.
+Built for cartographic & editorial work: select countries, assign colours, export as SVG —
+with proper map projections instead of simple Plate Carrée.
 
-## Architektur
-Gleiche Architektur wie LIPA BILLING (`c:\Tools\Billing 26`) und health-dashboard:
-- `nodeIntegration: true`, `contextIsolation: false` — kein Preload, kein contextBridge
-- **main.js** ist minimal (~25 Zeilen): BrowserWindow + 3 Window-Control-IPC + 1 Dialog-IPC
-- **renderer.js** hat vollen Node.js-Zugriff: `require('fs')`, `require('path')`, `require('shpjs')`
-- Alle App-Logik läuft in renderer.js
+## Architecture
+Same as LIPA BILLING (`c:\Tools\Billing 26`) and health-dashboard:
+- `nodeIntegration: true`, `contextIsolation: false` — no Preload, no contextBridge
+- **main.js** is minimal (~30 lines): BrowserWindow + 3 Window-Control IPC + 1 Dialog IPC
+- **renderer.js** has full Node.js access: `require('fs')`, `require('path')`, `require('shpjs')`
+- All app logic runs in renderer.js
 
-## Projektstruktur
+## Project Structure
 ```
 Map Projektion SVG/
 ├── main.js          # Electron Main Process
-├── index.html       # HTML-Shell + gesamtes CSS
-├── renderer.js      # Gesamte App-Logik
+├── index.html       # HTML + full CSS
+├── renderer.js      # Complete app logic
 ├── package.json
 ├── CLAUDE.md
-├── data/                          # Natural Earth Shapefiles (ZIPs)
+├── data/                          # Natural Earth shapefiles + bundled data
 │   ├── ne_10m_admin_0_countries.zip
 │   ├── ne_10m_lakes.zip
 │   ├── ne_10m_rivers_lake_centerlines.zip
 │   ├── ne_50m_admin_0_countries.zip
 │   ├── ne_50m_lakes.zip
-│   └── ne_50m_rivers_lake_centerlines.zip
-└── prototypes/                    # Alte HTML-Versionen (nicht auf GitHub)
-    ├── country-svg-tool(7).html
-    ├── country-svg-tool(17).html  ← beste Basis für Electron-Version
-    └── country-svg-tool(26).html
+│   ├── ne_50m_rivers_lake_centerlines.zip
+│   └── migration-routes.json      # Out of Africa routes (bundled)
+└── prototypes/                    # Old HTML versions (gitignored)
 ```
 
 ## Tech Stack
-- **Electron** v29 — Desktop-Shell
-- **shpjs** v3.6.3 — parst Shapefile-ZIPs zu GeoJSON (Node.js + Browser kompatibel)
-- **d3-geo** v2.x — Projektionen + SVG-Pfad-Generierung für World Mode (CJS-kompatibel)
-- **d3-geo-polygon** v1.x — `geoCahillKeyes()` Projektion (CJS-kompatibel via UMD bundle)
-- **Vanilla HTML/CSS/JS** — kein Framework, kein Bundler
+- **Electron** v29 — Desktop shell
+- **shpjs** v3.6.3 — parses Shapefile ZIPs to GeoJSON (Node.js + browser compatible)
+- **d3-geo** v2.x — projections + SVG path generation for World Mode (CJS compatible)
+- **d3-geo-polygon** v1.x — `geoCahillKeyes()` projection (CJS compatible via UMD bundle)
+- **Vanilla HTML/CSS/JS** — no framework, no bundler
 
-## Zwei Render-Pfade (wichtig!)
-Die App hat zwei grundlegend verschiedene Render-Pfade:
+## Two Render Paths (important!)
+The app has two fundamentally different render paths:
 
-### Region Mode — Pure JS
-Projektions-Mathe selbst implementiert in `projectFeatures()`, zentriert auf Bounding Box
-der Auswahl. Gibt ViewBox = exakte Bounding Box der gewählten Länder aus.
-- LAEA, AEQD, Mercator
-- Kein d3-Bezug
+### Region Mode — Pure JavaScript
+Projection math implemented in `projectFeatures()`, centred on bounding box of selection.
+Returns ViewBox = exact bounding box of chosen countries.
+**Projections:** LAEA, AEQD, Mercator
+**Note:** No d3 involvement, pure custom maths
 
 ### World Mode — d3-geo
-Nutzt `d3-geo` + `d3-geo-polygon` für alle Projektionen. d3 übernimmt automatisch:
-- Polygon-Clipping an Projektionsgrenzen (kritisch bei Cahill-Keyes!)
-- Sphere-Hintergrund (Ozean)
-- `geoPath(projection)(feature)` → SVG path string direkt
-Feste Canvas-Größe: 2000×1000px. Alle Länder werden gerendert —
-ausgewählte in ihren Farben, Rest neutral (`#3a3a3a`).
+Uses `d3-geo` + `d3-geo-polygon` for all projections. d3 handles automatically:
+- Polygon clipping at projection boundaries (critical for Cahill-Keyes!)
+- Sphere background (ocean)
+- `geoPath(projection)(feature)` → SVG path string directly
 
-Projektionen World Mode:
-- **laea** — `d3.geoAzimuthalEqualArea()`
-- **aeqd** — `d3.geoAzimuthalEquidistant()`
-- **merc** — `d3.geoMercator()`
-- **naturalearth** — `d3.geoNaturalEarth1()`
-- **cahill-keyes** — `geoCahillKeyes()` aus d3-geo-polygon
+Fixed canvas size: 2000×1000px. All countries rendered — selected in their colours, rest neutral (`#3a3a3a`).
 
-## IPC-Kanäle (main ↔ renderer)
-| Kanal | Richtung | Beschreibung |
+**Projections:**
+- **equirectangular** — simple Lon/Lat grid
+- **naturalearth** — Natural Earth compromise projection
+- **cahill-keyes** — Cahill-Keyes butterfly/octahedral (d3-geo-polygon)
+
+## IPC Channels (main ↔ renderer)
+| Channel | Direction | Description |
 |---|---|---|
-| `win:minimize` | renderer→main | Fenster minimieren |
-| `win:maximize` | renderer→main | Fenster maximieren/wiederherstellen |
-| `win:close`    | renderer→main | Fenster schließen |
-| `dialog:openFiles` | renderer→main (invoke) | Nativer Datei-Öffnen-Dialog, gibt `{ canceled, filePaths }` zurück |
+| `win:minimize` | renderer→main | Minimise window |
+| `win:maximize` | renderer→main | Maximise/restore window |
+| `win:close` | renderer→main | Close window |
+| `dialog:openFiles` | renderer→main (invoke) | Native file picker dialog; returns `{ canceled, filePaths }` |
 
-Kein IPC für Daten — shpjs läuft direkt im Renderer via `require`.
+No IPC for data — shpjs runs directly in renderer via `require`.
 
-## Datei-Loading
-Drei Pfade für Shapefile-Input:
-1. **Auto-load** (primär): beim Start liest `fs.readFileSync` die ZIPs aus `path.join(__dirname, 'data')`
-2. **IPC Dialog** (Fallback): `dialog:openFiles` öffnet nativen Datei-Picker
-3. **Drag & Drop** (Fallback): Browser File API → `file.arrayBuffer()`
+## File Loading
+Three paths for shapefile input:
+1. **Auto-load** (primary): on startup, `fs.readFileSync` reads ZIPs from `path.join(__dirname, 'data')`
+2. **IPC Dialog** (fallback): `dialog:openFiles` opens native file picker
+3. **Drag & Drop** (fallback): Browser File API → `file.arrayBuffer()`
 
-Node Buffer → ArrayBuffer Konvertierung: `buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)`
+Node Buffer → ArrayBuffer conversion: `buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)`
 
-## localStorage-Schema
-| Key | Inhalt |
+## localStorage Schema
+| Key | Contents |
 |---|---|
-| `ne_resolution` | `'10m'` oder `'50m'` — zuletzt gewählte Auflösung |
-| `app_mode` | `'region'` oder `'world'` — zuletzt gewählter Modus |
-| `combos` | `JSON` — Array von `{ id: number, countries: string[] }` |
-| `colors` | `JSON` — Map von Ländername → Hex-Farbe, z.B. `{ "Namibia": "#E8A838" }` |
+| `ne_resolution` | `'10m'` or `'50m'` — last selected resolution |
+| `app_mode` | `'region'` or `'world'` — last selected mode |
+| `combos` | `JSON` — array of `{ id: number, countries: string[] }` |
+| `colors` | `JSON` — map of country name → hex colour, e.g. `{ "Namibia": "#E8A838" }` |
 
-## SVG-Output
+## SVG Output
 ### Region Mode
-- ViewBox = exakte Bounding Box der gewählten Länder
-- Nur ausgewählte Länder im SVG
+- ViewBox = exact bounding box of selected countries
+- Only selected countries in SVG
+- Layer order: ocean (if any) → graticule (optional, coming) → countries → water (lakes/rivers)
 
 ### World Mode
-- ViewBox = `0 0 2000 1000` (fest)
-- Alle Länder im SVG — ausgewählte farbig, Rest `#3a3a3a`
-- Sphere-Hintergrund (Ozean) als erstes `<path>`
-- Jedes Land als `<path id="country_name">` — einzeln selektierbar in Illustrator/Affinity
-- `fill-rule="evenodd"` für korrekte Loch-Darstellung
+- ViewBox = `0 0 2000 1000` (fixed)
+- All countries rendered — selected in their colours, rest neutral (`#3a3a3a`)
+- Layer order: ocean → graticule → reference lines (equator/tropics/polar circles) → countries → water (lakes/rivers) → migration routes (optional)
+- Each country as `<path id="country_name">` — individually selectable in Illustrator/Affinity
+- `fill-rule="evenodd"` for correct hole rendering
+
+## SVG Named Groups
+Migration routes layer uses named SVG groups for easy selection in design tools:
+- `migration-routes` — route line segments (solid + dashed)
+- `migration-stops` — stop markers (circles, sized by importance)
+- `migration-labels` — place name labels
+
+## UI Layout
+**Left panel (scrollable, ~380px):**
+- **Sticky header:** Mode toggle (⊞ Region | ⊕ World) full width
+- **Sections 01–05:**
+  - **01 Data Layers** — Countries (10m/50m toggle) + Lakes & Rivers (manual + auto-load)
+  - **02 Country Selection** — Autocomplete input + selected tags + saved combos
+  - **03 Colours** — Country colour assignment + stroke width/colour + island filter (region mode only)
+  - **04 Grid & Background** — Ocean colour + graticule + reference lines (world mode only)
+  - **05 Overlays** — Migration Routes toggle + place labels + placeholders for Country/Marine Labels
+
+**Right panel (preview + toolbar):**
+- **Preview toolbar:** Selected countries label + projection pills (region or world) on right
+- **Preview canvas:** SVG rendered live
+- **Download bar:** Generate button (left) + SVG info centre + Copy/Download buttons (right)
 
 ## Design
-- Dark Theme, CSS Custom Properties in `index.html` (`:root`)
-- Fonts: **DM Mono** (UI) + **Fraunces** (Titel) — Google Fonts
-- Frameless Window (`frame: false`), Drag-Region via `-webkit-app-region: drag` im Titlebar
-- Custom Window Controls (─ □ ✕) oben rechts, `-webkit-app-region: no-drag`
-- Farbpalette: 20 Farben in `PALETTE` Array in renderer.js
-- Mode Toggle (Region / World) ganz oben im linken Panel
+- Dark theme, CSS Custom Properties in `index.html` (`:root`)
+- Fonts: **DM Mono** (UI) + **Fraunces** (title) — Google Fonts
+- Frameless window (`frame: false`), drag region via `-webkit-app-region: drag` in titlebar
+- Custom window controls (─ □ ✕) top right, `-webkit-app-region: no-drag`
+- Colour palette: 20 colours in `PALETTE` array in renderer.js
+- All UI text in British English
+
+## Development
+```bash
+npm install        # one-time — installs Electron, shpjs, d3-geo, d3-geo-polygon
+npm start          # from native PowerShell — not Claude Code shell
+```
 
 ## GitHub
 `https://github.com/weltenlaeufersteve-create/Map-Projections.git`
 
-## Entwicklung
-```
-npm install        # einmalig — lädt Electron, shpjs, d3-geo, d3-geo-polygon
-npm start          # aus eigenem PowerShell-Terminal — nicht Claude Code Shell
-```
+## Notes for Future Work
+- Projection pills on preview toolbar respond to clicks and trigger SVG generation
+- Migration data bundled as JSON in `data/migration-routes.json` — sources documented
+- Region/World mode auto-switches projections (e.g., entering World with LAEA selected → switches to Natural Earth)
+- Layer visibility toggled via `.world-only` and `.region-only` CSS classes
+- All user selections (resolution, combos, colours, mode) persisted to localStorage
 
-## Aktueller Funktionsumfang
+## Current Features
 | Feature | Status |
 |---|---|
-| Auto-load NE-Shapefiles aus App-Ordner | ✅ |
-| 10m / 50m Auflösungs-Toggle | ✅ |
-| Länder-Autocomplete | ✅ |
-| Kombis speichern/laden (persistent) | ✅ |
-| Farb-Zuweisung pro Land (persistent) | ✅ |
-| Region Mode: LAEA / AEQD / Mercator | ✅ |
-| World Mode: LAEA / AEQD / Mercator / Natural Earth / Cahill-Keyes | ✅ |
-| Inseln-Filter (% des größten Polygons) | ✅ |
-| Seen + Flüsse als optionale Layer | ✅ |
-| SVG Preview, Download, Copy | ✅ |
-| Manueller Datei-Picker (IPC Dialog) | ✅ |
-| Drag & Drop Fallback | ✅ |
+| Auto-load NE shapefiles from app folder | ✅ |
+| 10m / 50m resolution toggle | ✅ |
+| Country autocomplete | ✅ |
+| Save/load combos (persistent) | ✅ |
+| Colour assignment per country (persistent) | ✅ |
+| **Region Mode:** LAEA / AEQD / Mercator | ✅ |
+| **World Mode:** Equirectangular / Natural Earth / Cahill-Keyes | ✅ |
+| Island filter (% of largest polygon) | ✅ |
+| Lakes + Rivers optional layers | ✅ |
+| Out of Africa migration routes | ✅ |
+| SVG preview, download, copy to clipboard | ✅ |
+| Manual file picker (IPC dialog) | ✅ |
+| Drag & drop fallback | ✅ |
+| World Mode reference lines: equator, tropics ±23.5°, polar circles ±66.5° | ✅ |
+| Graticule 15° grid (world mode) | ✅ |
 
-## Geplante Features
-
-### Globe View (3D rotierbar)
-Orthografische Projektion mit Mouse-Drag-Rotation. Eine andere Claude-Instanz hat dazu
-bereits etwas entwickelt — erst sichten bevor implementiert wird.
-Wahrscheinlich Canvas/WebGL-basiert statt reinem SVG; SVG-Export als Snapshot.
+## Planned Features
+- **Country labels** — country names at centroids (placeholder in UI)
+- **Marine labels** — ocean/sea names (placeholder in UI)
+- **Zoom & pan preview** — interactive preview for detail checking
+- **Background rectangle** — optional solid background in SVG
+- **Batch export** — export multiple saved combos at once
