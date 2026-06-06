@@ -540,7 +540,7 @@
           <span style="flex:1;"></span>
           <input type="color" id="riverColor" value="#7ab3d4" class="color-input">
         </label>
-        <div class="stroke-row" style="margin-top:4px;">
+        <div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-size:12px;">
           <span>Width</span>
           <input type="range" id="riverWidth" min="0.2" max="3" step="0.1" value="0.8" class="slider-input">
           <span id="riverWidthVal" class="slider-value">0.8</span>
@@ -580,13 +580,13 @@
     <div class="color-assign" id="colorAssign">
       <div style="font-size:11px;color:var(--text-dim);">Select countries to assign colours</div>
     </div>
-    <div style="margin-top:8px;" class="stroke-row">
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:12px;">
       <span>Country Borders</span>
       <input type="range" id="strokeWidth" min="0" max="3" step="0.1" value="1" class="slider-input">
       <span id="strokeVal" class="slider-value">1</span>
       <input type="color" id="strokeColor" value="#ffffff" class="color-input">
     </div>
-    <div style="margin-top:6px;" class="stroke-row world-only">
+    <div style="margin-top:6px;display:flex;align-items:center;gap:8px;font-size:12px;" class="world-only">
       <span>Unselected Countries</span>
       <span style="flex:1;"></span>
       <input type="color" id="neutralColor" value="#3a3a3a" class="color-input">
@@ -595,7 +595,7 @@
       <span>Hide Islands</span>
       <span style="flex:1;"></span>
     </div>
-    <div style="margin-top:4px;" class="stroke-row region-only">
+    <div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-size:12px;" class="region-only">
       <span></span>
       <input type="range" id="islandThreshold" min="0" max="99" step="1" value="0" class="slider-input">
       <span id="islandVal" class="slider-value">off</span>
